@@ -288,7 +288,7 @@ NameTableErrors NameTablePush(NameTableType* nameTable, const Name val)
     return NameTableErrors::NO_ERR;
 }
 
-NameTableErrors NameTableFind(NameTableType* table, const char* name, Name** outName)
+NameTableErrors NameTableFind(const NameTableType* table, const char* name, Name** outName)
 {
     assert(table);
     assert(outName);
@@ -309,7 +309,7 @@ NameTableErrors NameTableFind(NameTableType* table, const char* name, Name** out
     return NameTableErrors::NO_ERR;
 }
 
-NameTableErrors NameTableGetPos(NameTableType* table, Name* namePtr, size_t* outPos)
+NameTableErrors NameTableGetPos(const NameTableType* table, Name* namePtr, size_t* outPos)
 {
     assert(table);
     assert(namePtr);
@@ -320,7 +320,7 @@ NameTableErrors NameTableGetPos(NameTableType* table, Name* namePtr, size_t* out
     return NameTableErrors::NO_ERR;
 }
 
-NameTableErrors NameTableVerify(NameTableType* nameTable)
+NameTableErrors NameTableVerify(const NameTableType* nameTable)
 {
     assert(nameTable);
 
@@ -646,9 +646,11 @@ void NameTablePrintError(NameTableErrors error)
 }
 #undef PRINT_ERR
 
-void NameCtor(Name* name, const char* string, void* localNameTablePtr, size_t varRamId)
+void NameCtor(Name* name, const char* string, void* localNameTablePtr, 
+              int memShift, IRRegister reg)
 {
     name->name           = strdup(string);
     name->localNameTable = localNameTablePtr;
-    name->varRamId       = varRamId;
+    name->memShift       = memShift;
+    name->reg          = reg;
 }

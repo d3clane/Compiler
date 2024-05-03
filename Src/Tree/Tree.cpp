@@ -558,7 +558,7 @@ static const char* TreeReadNodeValue(TreeNodeValue* value, TreeNodeValueType* va
 
         inputString[inputStringPos] = '\0';
         Name pushName = {};
-        NameCtor(&pushName, inputString, nullptr, 0);
+        NameCtor(&pushName, inputString, nullptr, 0, IRRegister::NO_REG);
 
         NameTablePush(allNamesTable, pushName);
 
@@ -586,7 +586,7 @@ static const char* TreeReadNodeValue(TreeNodeValue* value, TreeNodeValueType* va
     if (varInNameTablePtr == nullptr)
     {
         Name pushName = {};
-        NameCtor(&pushName, inputString, nullptr, 0);
+        NameCtor(&pushName, inputString, nullptr, 0, IRRegister::NO_REG);
 
         NameTablePush(allNamesTable, pushName);
 

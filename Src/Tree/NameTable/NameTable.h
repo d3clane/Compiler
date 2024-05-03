@@ -8,6 +8,7 @@
 
 #include "NameTablesTypes.h"
 #include "HashFuncs.h"
+#include "BackEnd/IR/IRRegisters.h"
 
 //#define NAME_TABLE_CANARY_PROTECTION
 //#define NAME_TABLE_HASH_PROTECTION
@@ -113,14 +114,14 @@ NameTableErrors NameTableDtor(NameTableType* const stk);
 /// @return errors that occurred
 NameTableErrors NameTablePush(NameTableType* stk, const Name val);
 
-NameTableErrors NameTableFind(NameTableType* table, const char* name, Name** outName);
+NameTableErrors NameTableFind(const NameTableType* table, const char* name, Name** outName);
 
-NameTableErrors NameTableGetPos(NameTableType* table, Name* namePtr, size_t* outPos);
+NameTableErrors NameTableGetPos(const NameTableType* table, Name* namePtr, size_t* outPos);
 
 /// @brief Verifies if nameTable is used properly
 /// @param [in]stk nameTable to verify
 /// @return NameTableErrors in nameTable
-NameTableErrors NameTableVerify(NameTableType* stk);
+NameTableErrors NameTableVerify(const NameTableType* stk);
 
 /// @brief Prints nameTable to log-file 
 /// @param [in]stk nameTable to print out
@@ -142,10 +143,22 @@ static inline bool NameTableIsEmpty(const NameTableType* stk)
     return stk->size == 0;
 }
 
+static inline const char* NameTableGetName(const NameTableType* table, size_t pos)
+{
+    return table->data[pos].name;
+}
+
+static inline void NameTableSetLocalTable(const NameTableType* table, size_t pos, 
+                                          NameTableType* localTable)
+{
+    table->data[pos].localNameTable = localTable;
+}
+
 /// @brief Prints nameTable error to log file
 /// @param [in]error error to print
 void NameTablePrintError(NameTableErrors error);
 
-void NameCtor(Name* name, const char* string, void* localNameTablePtr, size_t varRamId);
+void NameCtor(Name* name, const char* string, void* localNameTablePtr, 
+              int memShift, IRRegister reg);
 
 #endif // NAME_TABLE_H

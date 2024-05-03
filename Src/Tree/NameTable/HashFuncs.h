@@ -1,6 +1,9 @@
 #ifndef HASH_FUNCS_H
 #define HASH_FUNCS_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 /// @file
 /// @brief Contains functions to hash
 

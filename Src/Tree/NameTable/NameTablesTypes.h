@@ -8,12 +8,16 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "BackEnd/IR/IRRegisters.h"
+
 struct Name
 {
     char* name;
 
-    void* localNameTable;
-    size_t varRamId;
+    void*  localNameTable;
+
+    IRRegister reg;    /// < register to address from 
+    size_t     memShift; /// < shift relatively to register
 };
 
 /// @brief Chosen NAME_TABLE_POISON value for stack
