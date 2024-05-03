@@ -7,6 +7,21 @@
 #include "IR.h"
 #include "Tree/NameTable/NameTable.h"
 
+struct CompilerInfoState
+{
+    NameTableType* localTable;
+    const NameTableType* allNamesTable;
+
+    IR* ir;
+
+    size_t* labelId;
+
+    size_t     memShift;
+    IRRegister regShift;
+
+    size_t numberOfFuncParams;
+};
+
 static inline IROperandValue IROperandValueCreate(long long imm = 0, 
                                                   IRRegister reg = IRRegister::NO_REG, 
                                                   const char* string = nullptr,
@@ -25,61 +40,6 @@ static inline IROperand IROperandMemCreate(const long long imm, IRRegister reg);
 
 static inline IR* IRCtor();
 
-static IROperand AsmCodeBuildFunc(const TreeNode* node, const NameTableType* allNamesTable, 
-                             size_t* varRamId, IR* ir);
-
-static IROperand AsmCodePrintStringLiteral(const TreeNode* node, NameTableType* localTable, 
-                          const NameTableType* allNamesTable, IR* ir);   
-
-static IROperand NameTablePushFuncParams(const TreeNode* node, NameTableType* local, 
-                                    const NameTableType* allNamesTable, size_t* varRamId);
-static IROperand AsmCodeBuildIf(const TreeNode* node, NameTableType* localTable, 
-                             const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                             size_t numberOfTabs);
-static IROperand AsmCodeBuildWhile(const TreeNode* node, NameTableType* localTable, 
-                              const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                              size_t numberOfTabs);
-static IROperand AsmCodeBuildAssign(const TreeNode* node, NameTableType* localTable, 
-                               const NameTableType* allNamesTable, size_t* varRamId, IR* ir,
-                               size_t numberOfTabs);
-static IROperand AsmCodeBuildAnd(const TreeNode* node, NameTableType* localTable, 
-                            const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                            size_t numberOfTabs);
-static IROperand AsmCodeBuildOr(const TreeNode* node, NameTableType* localTable, 
-                            const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                            size_t numberOfTabs);
-static IROperand AsmCodeBuildFuncCall(const TreeNode* node, NameTableType* localTable, 
-                                 const NameTableType* allNamesTable, IR* ir,
-                                 size_t numberOfTabs);
-static IROperand AsmCodeBuildEq(const TreeNode* node, NameTableType* localTable, 
-                            const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                            size_t numberOfTabs);
-static IROperand AsmCodeBuildNotEq(const TreeNode* node, NameTableType* localTable, 
-                              const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                              size_t numberOfTabs);
-static IROperand AsmCodeBuildGreaterEq(const TreeNode* node, NameTableType* localTable, 
-                                  const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                                  size_t numberOfTabs);
-static IROperand AsmCodeBuildLessEq(const TreeNode* node, NameTableType* localTable, 
-                               const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                               size_t numberOfTabs);
-static IROperand AsmCodeBuildLess(const TreeNode* node, NameTableType* localTable, 
-                             const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                             size_t numberOfTabs);
-static IROperand AsmCodeBuildGreater(const TreeNode* node, NameTableType* localTable, 
-                                const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                                size_t numberOfTabs);
-
-static IROperand AsmCodeBuildPrint(const TreeNode* node, NameTableType* localTable, 
-                        const NameTableType* allNamesTable, IR* ir);
-
-#define PRINT(...) FprintfLine(outStream, __VA_ARGS__)
-#define CODE_BUILD(NODE) AsmCodeBuild(NODE, localTable, allNamesTable, outStream)
-
-#define PARAMS(NODE)                NODE, localTable, allNamesTable, outStream
-#define PARAMS_WITH_RAM_ID(NODE)    NODE, localTable, allNamesTable, &varRamId, outStream
-#define PARAMS_WITH_LABEL_ID(NODE)  NODE, localTable, allNamesTable, &labelId,  outStream
-
 static void BuildIR                    (const TreeNode* node, NameTableType* localTable, 
                                         const NameTableType* allNamesTable, IR* ir);
 
@@ -88,6 +48,9 @@ static void BuildArithmeticOp          (const TreeNode* node, NameTableType* loc
 
 static void BuildFuncCall              (const TreeNode* node, NameTableType* localTable, 
                                         const NameTableType* allNamesTable, IR* ir);
+
+static void PushFuncCallArgs            (const TreeNode* node, const NameTableType* localTable, 
+                                         const NameTableType* allNamesTable, IR* ir);
 
 static void BuildFunc(const TreeNode* node, const NameTableType* allNamesTable, IR* ir);
 
@@ -98,13 +61,17 @@ static size_t InitFuncParams(const TreeNode* node, NameTableType* local,
 static int InitFuncLocalVars(const TreeNode* node, NameTableType* local,
                              const NameTableType* allNamesTable, 
                              int* memShift, IRRegister regShift);
-                             
+
+static inline const char* CreateTmpStringDANGEROUS(const char* format, ...);
+
 #define TYPE(IR_TYPE)      IROperandType::IR_TYPE
 #define IR_REG(REG_NAME)   IRRegister::REG_NAME  
 #define OP(OP_NAME)        IROperation::OP_NAME
 #define EMPTY_OPERAND      IROperandCtor()
 #define IR_PUSH(NODE)      IRPushBack(ir, NODE)
 #define CREATE_VALUE(...)  IROperandValueCreate(__VA_ARGS__)
+
+#define TMP_STR(FORMAT, ...) CreateTmpStringDANGEROUS(FORMAT, __VA_ARGS__)
 
 IR* BuildIR(Tree* tree, const NameTableType* allNamesTable)
 {
@@ -162,58 +129,45 @@ static void BuildIR(const TreeNode* node, NameTableType* localTable,
         case TreeOperationId::TAN:
         case TreeOperationId::COT:
         case TreeOperationId::SQRT:
+        {
             BuildArithmeticOp(node, localTable, allNamesTable, ir);
             break;
-
-        case TreeOperationId::COMMA:
-        {
-            assert(false);
-            // Это надо обработать в передаче аргументов функции и никак иначе
-
-            // TODO:
-            // BUILD(node->right);
-            // BUILD(node->left);
-
-            // Comma goes in the opposite way, because it is used here only for func call
-            break;
         }
+
         case TreeOperationId::NEW_FUNC:
         case TreeOperationId::TYPE:
         case TreeOperationId::LINE_END:
         {
             BuildIR(node->left,  localTable, allNamesTable, ir);
             BuildIR(node->right, localTable, allNamesTable, ir);
-            return;
+            break;
         }
 
         case TreeOperationId::TYPE_INT:
-            return;
+            break;;
     
         case TreeOperationId::FUNC:
         {
             BuildFunc(node, allNamesTable, ir);
-            
-            return;
+            break;
         }
 
         case TreeOperationId::FUNC_CALL:
         {
             BuildFuncCall(node, localTable, allNamesTable, ir);
-            return;
+            break;;
         }
 
         case TreeOperationId::IF:
         {
             BuildIf(node, localTable, allNamesTable, &labelId, ir);
-
-            return;
+            break;
         }
 
         case TreeOperationId::WHILE:
         {
             BuildWhile(node, localTable, allNamesTable, &labelId, ir);
-
-            return;
+            break;
         }
 
         case TreeOperationId::ASSIGN:
@@ -225,14 +179,7 @@ static void BuildIR(const TreeNode* node, NameTableType* localTable,
         case TreeOperationId::RETURN:
         {
             BuildReturn(node, localTable, allNamesTable, ir);
-
-            //BUILD(node->left);
-
-            //TODO: вопрос оставлять так или двигать в функцию. Наверное двигать в функцию стоит
-            //IRPushBack(ir->end, 
-            //   IRNodeCreate(IROperation::RET, nullptr, 0, IROperandCtor(), IROperandCtor()));
-            
-            return;
+            break;
         }
 
         case TreeOperationId::EQ:
@@ -241,15 +188,20 @@ static void BuildIR(const TreeNode* node, NameTableType* localTable,
         case TreeOperationId::LESS_EQ:
         case TreeOperationId::GREATER:
         case TreeOperationId::GREATER_EQ:
-            return BuildComparison(node, localTable, allNamesTable, &labelId, ir);
+        {
+            BuildComparison(node, localTable, allNamesTable, &labelId, ir);
+            break;
+        }
 
-        case TreeOperationId::READ:
-            return BuildRead(ir);
+        case TreeOperationId::READ
+        {
+            BuildRead(ir);
+            break;
+        }
 
         case TreeOperationId::PRINT:
         {
             BuildPrint(node, localTable, allNamesTable, ir);
-
             break;
         }
 
@@ -339,19 +291,7 @@ static void BuildFunc(const TreeNode* node, const NameTableType* allNamesTable, 
     IR_PUSH(IRNodeCreate(OP(ADD), nullptr, 2, IROperandRegCreate(IR_REG(RSP)), 
                                               IROperandImmCreate((long long)rspShift)));
 
-    BuildIR(funcNameNode->right, localTable, allNamesTable, ir);
-
-    // pop return value in XMM0
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)),
-                                                EMPTY_OPERAND));
-
-    IR_PUSH(IRNodeCreate(OP(MOV), nullptr, 2, IROperandRegCreate(IR_REG(RSP)), 
-                                              IROperandRegCreate(IR_REG(RBP))));
-
-    IR_PUSH(IRNodeCreate(OP(POP), nullptr, 1, IROperandRegCreate(IR_REG(RBP)), EMPTY_OPERAND));
-
-    IR_PUSH(IRNodeCreate(OP(RET), nullptr, 1, IROperandImmCreate((long long)numberOfParams),
-                                              EMPTY_OPERAND));                                              
+    BuildIR(funcNameNode->right, localTable, allNamesTable, ir);                                          
 }
 
 // Pascal decl
@@ -450,11 +390,10 @@ static void BuildFuncCall              (const TreeNode* node, const NameTableTyp
 
     const char* funcName = NameTableGetName(allNamesTable, node->left->value.nameId);
 
-    IR_PUSH(IRNodeCreate(OP(CALL), nullptr, 1, IROperandStrCreate(funcName),
-                                               EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(CALL), nullptr, 1, IROperandStrCreate(funcName), EMPTY_OPERAND));
+
     // pushing ret value on stack
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)),
-                                                 EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
 }
 
 static void PushFuncCallArgs(const TreeNode* node, const NameTableType* localTable, 
@@ -503,79 +442,96 @@ static void PushFuncCallArgs(const TreeNode* node, const NameTableType* localTab
     }
 }
 
-static IROperand AsmCodeBuildIf(const TreeNode* node, NameTableType* localTable, 
-                           const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                           size_t numberOfTabs)
+static void BuildIf(const TreeNode* node, NameTableType* localTable,
+                    const NameTableType* allNamesTable, size_t* labelId, IR* ir)
 {
-    fprintf(outStream, "\n");
-    PRINT("@ if condition:\n");
+    // TODO: можно отдельную функцию, где иду в condition и там, основываясь сразу на сравнении,
+    // Деляю вывод о jump to if end / not jump (типо на стек не кладу, выгодно по времени)
 
-    BUILD(node->left);
+    static const size_t maxLabelLen = 64;
+    char ifEndLabel[maxLabelLen] = "";
+    snprintf(ifEndLabel, maxLabelLen, "END_IF_%zu", id);
 
-    size_t id = *labelId;
-    PRINT("push 0\n");
-    PRINT("je END_IF_%zu:\n", id);
-    *labelId += 1;
-
-    PRINT("@ if code block:\n");
-
-    BuildIR(node->right, localTable, allNamesTable, outStream);
+    BuildIR(node->left, localTable, allNamesTable, ir);
     
-    PRINT("END_IF_%zu:\n\n", id);
+    size_t id = *labelId;
+    *labelId += 1;
+
+    IR_PUSH(IRNodeCreate(OP(POP), nullptr, 2, IROperandRegCreate(IR_REG(RAX)), EMPTY_OPERAND));
+    
+    IR_PUSH(IRNodeCreate(OP(TEST), nullptr, 2, IROperandRegCreate(IR_REG(RAX)), 
+                                               IROperandRegCreate(IR_REG(RAX))));
+
+    IR_PUSH(IRNodeCreate(OP(JE), nullptr, 1, IROperandStrCreate(ifEndLabel), 
+                                             EMPTY_OPERAND));
+
+    BuildIR(node->right, localTable, allNamesTable, ir);
+
+    IR_PUSH(IRNodeCreate(OP(NOP), ifEndLabel, 0, EMPTY_OPERAND, EMPTY_OPERAND));
 }
 
-static IROperand AsmCodeBuildWhile(const TreeNode* node, NameTableType* localTable, 
-                              const NameTableType* allNamesTable, size_t* labelId, IR* ir,
-                              size_t numberOfTabs)
+static void BuildWhile(const TreeNode* node, NameTableType* localTable,
+                    const NameTableType* allNamesTable, size_t* labelId, IR* ir)
 {
     size_t id = *labelId;
-
-    fprintf(outStream, "\n");
-
-    PRINT("while_%zu:\n", id);
-
-    *labelId += 1;
-    PRINT("@ while condition: \n");
-
-    BUILD(node->left);
-
-    PRINT("push 0\n");
-    PRINT("je END_WHILE_%zu:\n", id);
-
     *labelId += 1;
 
-    PRINT("@ while code block: \n");
+    static const size_t maxLabelLen = 64;
+    char whileBeginLabel[maxLabelLen] = "";
+    char whileEndLabel  [maxLabelLen] = "";
+    snprintf(whileBeginLabel, maxLabelLen, "WHILE_%zu",     id);
+    snprintf(whileEndLabel,   maxLabelLen, "END_WHILE_%zu", id);
 
-    BuildIR(node->right, localTable, allNamesTable, outStream);
+    IR_PUSH(IRNodeCreate(OP(NOP), whileBeginLabel, 0, EMPTY_OPERAND, EMPTY_OPERAND));
 
-    PRINT("END_WHILE_%zu:\n\n", id);
+    BuildIR(node->left, localTable, allNamesTable, ir);
+
+    IR_PUSH(IRNodeCreate(OP(POP), nullptr, 2, IROperandRegCreate(IR_REG(RAX)), EMPTY_OPERAND));
+    
+    IR_PUSH(IRNodeCreate(OP(TEST), nullptr, 2, IROperandRegCreate(IR_REG(RAX)), 
+                                               IROperandRegCreate(IR_REG(RAX))));
+                                               
+    IR_PUSH(IRNodeCreate(OP(JE), nullptr, 1, IROperandStrCreate(whileEndLabel), EMPTY_OPERAND));
+
+    BuildIR(node->right, localTable, allNamesTable, ir);
+
+    IR_PUSH(IRNodeCreate(OP(JMP), nullptr, 1, IROperandStrCreate(whileBeginLabel), EMPTY_OPERAND));
+
+    IR_PUSH(IRNodeCreate(OP(NOP), whileEndLabel, 0, EMPTY_OPERAND, EMPTY_OPERAND));
 }
 
-static IROperand AsmCodeBuildAssign(const TreeNode* node, NameTableType* localTable, 
-                              const NameTableType* allNamesTable, size_t* varRamId, IR* ir,
-                              size_t numberOfTabs)
+static void BuildAssign(const TreeNode* node, NameTableType* localTable, 
+                        const NameTableType* allNamesTable, IR* ir)
 {
-    BUILD(node->right);
-
     assert(node->left->valueType == TreeNodeValueType::NAME);
+    
+    Name* varName = nullptr;
+    NameTableFind(localTable, NameTableGetName(allNamesTable, node->left->value.nameId), &varName);
 
-    Name* varNameInTablePtr = nullptr;
-    NameTableFind(localTable, allNamesTable->data[node->left->value.nameId].name, &varNameInTablePtr);
+    assert(varName);
 
-    // TODO: it is hotfix, a lot of operations are done
-    // better fix: split assigning and defining and push only once
-    if (varNameInTablePtr == nullptr)
-    {
-        Name pushName = {};
-        NameCtor(&pushName, allNamesTable->data[node->left->value.nameId].name, nullptr, *varRamId);
+    BuildIR(node->right, localTable, allNamesTable, ir);
 
-        *varRamId += 1;
+    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_MOV), nullptr, 2, IROperandMemCreate(varName->memShift, varName->reg),
+                                                IROperandRegCreate(IR_REG(XMM0))));
+}
 
-        NameTablePush(localTable, pushName);
-        varNameInTablePtr = localTable->data + localTable->size - 1;    // pointing on pushed name
-    }
+static void BuildReturn(const TreeNode* node, NameTableType* localTable, 
+                        const NameTableType* allNamesTable, IR* ir)
+{
+    BuildIR(node->left, localTable, allNamesTable, ir);
 
-    PRINT("pop [%zu]\n", varNameInTablePtr->varRamId);
+    
+    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+
+    IR_PUSH(IRNodeCreate(OP(MOV), nullptr, 2, IROperandRegCreate(IR_REG(RSP)), 
+                                              IROperandRegCreate(IR_REG(RBP))));
+
+    IR_PUSH(IRNodeCreate(OP(POP), nullptr, 1, IROperandRegCreate(IR_REG(RBP)), EMPTY_OPERAND));
+
+    IR_PUSH(IRNodeCreate(OP(RET), nullptr, 1, IROperandImmCreate((long long)numberOfParams),
+                                              EMPTY_OPERAND));    
 }
 
 static IROperand AsmCodeBuildAnd(const TreeNode* node, NameTableType* localTable, 
@@ -827,6 +783,21 @@ static IROperand FprintfLine(IR* ir, const size_t numberOfTabs, const char* form
     vfprintf(outStream, format, args);
 
     va_end(args);
+}
+
+static inline const char* CreateTmpStringDANGEROUS(const char* format, ...)
+{
+    static const size_t maxBufSize = 256;
+    static char tmpBuffer[maxBufSize] = "";
+
+    va_list args = {};
+    va_start(args, format);
+
+    vsnprintf(tmpBuffer, maxBufSize, format, args);
+
+    va_end(args);
+
+    return tmpBuffer;
 }
 
 //-----------------------------------------------------------------------------

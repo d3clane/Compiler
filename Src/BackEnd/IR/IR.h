@@ -14,6 +14,8 @@ enum class IROperation
 
     ADD, SUB,
 
+    TEST,
+
     F_ADD, F_SUB, F_MUL, F_DIV,
 
     F_AND, F_OR,
