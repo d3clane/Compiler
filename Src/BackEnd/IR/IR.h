@@ -14,8 +14,6 @@ enum class IROperation
 
     ADD, SUB,
 
-    TEST,
-
     F_ADD, F_SUB, F_MUL, F_DIV,
 
     F_AND, F_OR,
@@ -32,7 +30,11 @@ enum class IROperation
 
     CALL, RET,
 
-    OUT, IN,
+    F_OUT, F_IN,
+
+    STR_OUT,
+
+    HLT,
 
     #include "IROperations.h"
 };
@@ -95,7 +97,7 @@ enum class IRErrors
     MEM_ALLOC_ERR,
 };
 
-void IRPushBack  (IR* ir, IRNode* node, IRErrors* error = nullptr);
+void IRPushBack(IR* ir, IRNode* node);
 
 IRNode* IRNodeCreate(IROperation operation, const char* labelName, 
                      size_t numberOfOperands, IROperand operand1, IROperand operand2);
