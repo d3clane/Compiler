@@ -82,7 +82,7 @@ IR* IRBuild(const Tree* tree, const NameTableType* allNamesTable)
     
     IRBuild(tree->root, &info);
 
-    IRPushBack(ir, IRNodeCreate(OP(HLT), nullptr, 0, EMPTY_OPERAND, EMPTY_OPERAND));
+    IRPushBack(ir, IRNodeCreate(OP(HLT)));
 
     return ir;
 }
@@ -213,7 +213,7 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
     IROperand operand1 = IROperandRegCreate(IR_REG(XMM0));
     IROperand operand2 = IROperandRegCreate(IR_REG(XMM1));
 
-#define GENERATE_OPERATION_CMD(OPERATION_ID, _1, CHILDREN_CNT, ARITHM_OP, ...)              \
+#define GENERATE_OPERATION_CMD(OPERATION_ID, _1, CHILDREN_CNT, ARITHM_OP, ...)                  \
     case TreeOperationId::OPERATION_ID:                                                         \
     {                                                                                           \
         assert(CHILDREN_CNT > 0);                                                               \
@@ -221,12 +221,12 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
         if (CHILDREN_CNT == 2)                                                                  \
         {                                                                                       \
             IRBuild(node->right, info);                                                         \
-            IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, operand2, EMPTY_OPERAND));              \
+            IR_PUSH(IRNodeCreate(OP(F_POP), operand2));                                         \
         }                                                                                       \
         else operand2 = EMPTY_OPERAND;                                                          \
                                                                                                 \
-        IR_PUSH(IRNodeCreate(OP(F_POP),     nullptr, 1, operand1, EMPTY_OPERAND));              \
-        IR_PUSH(IRNodeCreate(OP(ARITHM_OP), nullptr, 2, operand1, operand2));                   \
+        IR_PUSH(IRNodeCreate(OP(F_POP), operand1));                                             \
+        IR_PUSH(IRNodeCreate(OP(ARITHM_OP), operand1, operand2));                               \
         break;                                                                                  \
     }
 
@@ -241,7 +241,7 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
 
 #undef GENERATE_OPERATION_CMD
 
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, operand1, EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), operand1));
 
     return;
 }
@@ -257,12 +257,11 @@ static void BuildFunc(const TreeNode* node, CompilerInfoState* info)
 
     TreeNode* funcNameNode = node->left;
 
-    IR_PUSH(IRNodeCreate(OP(NOP), NameTableGetName(info->allNamesTable, funcNameNode->value.nameId), 
-                         0, EMPTY_OPERAND, EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(NameTableGetName(info->allNamesTable, funcNameNode->value.nameId)));
 
-    IR_PUSH(IRNodeCreate(OP(PUSH), nullptr, 1, IROperandRegCreate(IR_REG(RBP)), EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(MOV),  nullptr, 2, IROperandRegCreate(IR_REG(RBP)), 
-                                               IROperandRegCreate(IR_REG(RSP))));
+    IR_PUSH(IRNodeCreate(OP(PUSH), IROperandRegCreate(IR_REG(RBP))));
+    IR_PUSH(IRNodeCreate(OP(MOV),  IROperandRegCreate(IR_REG(RBP)), 
+                                   IROperandRegCreate(IR_REG(RSP))));
 
     NameTableType* localTable = nullptr;
     NameTableCtor(&localTable);
@@ -278,8 +277,8 @@ static void BuildFunc(const TreeNode* node, CompilerInfoState* info)
     info->memShift = 0;
     int rspShift = InitFuncLocalVars(funcNameNode->right, info);
 
-    IR_PUSH(IRNodeCreate(OP(ADD), nullptr, 2, IROperandRegCreate(IR_REG(RSP)), 
-                                              IROperandImmCreate((long long)rspShift)));
+    IR_PUSH(IRNodeCreate(OP(ADD), IROperandRegCreate(IR_REG(RSP)), 
+                                  IROperandImmCreate((long long)rspShift)));
 
     IRBuild(funcNameNode->right, info);
 }
@@ -380,10 +379,10 @@ static void BuildFuncCall(const TreeNode* node, CompilerInfoState* info)
 
     const char* funcName = NameTableGetName(info->allNamesTable, node->left->value.nameId);
 
-    IR_PUSH(IRNodeCreate(OP(CALL), nullptr, 1, IROperandStrCreate(funcName), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(CALL), IROperandStrCreate(funcName), true));
 
     // pushing ret value on stack
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
 }
 
 static void PushFuncCallArgs(const TreeNode* node, CompilerInfoState* info)
@@ -403,11 +402,11 @@ static void PushFuncCallArgs(const TreeNode* node, CompilerInfoState* info)
             // TODO: вместо поиска можно внутри ноды заапдейтить nameId
             // или сделать стек какой-то из nameid потому что реально желательно в две стороны                         
 
-            IR_PUSH(IRNodeCreate(OP(F_MOV), nullptr, 2, 
+            IR_PUSH(IRNodeCreate(OP(F_MOV),
                                  IROperandRegCreate(IR_REG(XMM0)),
                                  IROperandMemCreate(name->memShift, name->reg)));
 
-            IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, 
+            IR_PUSH(IRNodeCreate(OP(F_PUSH), 
                                  IROperandRegCreate(IR_REG(XMM0)),
                                  EMPTY_OPERAND));
 
@@ -453,17 +452,16 @@ static void BuildIf(const TreeNode* node, CompilerInfoState* info)
     IRBuild(node->left, info);
     
 
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
     
-    IR_PUSH(IRNodeCreate(OP(F_CMP), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)), 
-                                                IROperandImmCreate(0)));
+    IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)), 
+                                    IROperandImmCreate(0)));
 
-    IR_PUSH(IRNodeCreate(OP(JE), nullptr, 1, IROperandStrCreate(ifEndLabel), 
-                                             EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(JE), IROperandStrCreate(ifEndLabel), true));
 
     IRBuild(node->right, info);
 
-    IR_PUSH(IRNodeCreate(OP(NOP), ifEndLabel, 0, EMPTY_OPERAND, EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(ifEndLabel));
 }
 
 static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
@@ -483,22 +481,22 @@ static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
     snprintf(whileBeginLabel, maxLabelLen, "WHILE_%zu",     id);
     snprintf(whileEndLabel,   maxLabelLen, "END_WHILE_%zu", id);
 
-    IR_PUSH(IRNodeCreate(OP(NOP), whileBeginLabel, 0, EMPTY_OPERAND, EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(whileBeginLabel));
 
     IRBuild(node->left, info);
 
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
     
-    IR_PUSH(IRNodeCreate(OP(F_CMP), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)), 
-                                                IROperandImmCreate(0)));
+    IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)), 
+                                    IROperandImmCreate(0)));
                                                
-    IR_PUSH(IRNodeCreate(OP(JE), nullptr, 1, IROperandStrCreate(whileEndLabel), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(JE), IROperandStrCreate(whileEndLabel), true));
 
     IRBuild(node->right, info);
 
-    IR_PUSH(IRNodeCreate(OP(JMP), nullptr, 1, IROperandStrCreate(whileBeginLabel), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(JMP), IROperandStrCreate(whileBeginLabel), true));
 
-    IR_PUSH(IRNodeCreate(OP(NOP), whileEndLabel, 0, EMPTY_OPERAND, EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(whileEndLabel));
 }
 
 static void BuildAssign(const TreeNode* node, CompilerInfoState* info)
@@ -519,9 +517,9 @@ static void BuildAssign(const TreeNode* node, CompilerInfoState* info)
 
     IRBuild(node->right, info);
 
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(F_MOV), nullptr, 2, IROperandMemCreate(varName->memShift, varName->reg),
-                                                IROperandRegCreate(IR_REG(XMM0))));
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
+    IR_PUSH(IRNodeCreate(OP(F_MOV), IROperandMemCreate(varName->memShift, varName->reg),
+                                    IROperandRegCreate(IR_REG(XMM0))));
 }
 
 static void BuildReturn(const TreeNode* node, CompilerInfoState* info)
@@ -532,15 +530,14 @@ static void BuildReturn(const TreeNode* node, CompilerInfoState* info)
 
     IRBuild(node->left, info);
     
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
 
-    IR_PUSH(IRNodeCreate(OP(MOV), nullptr, 2, IROperandRegCreate(IR_REG(RSP)), 
-                                              IROperandRegCreate(IR_REG(RBP))));
+    IR_PUSH(IRNodeCreate(OP(MOV), IROperandRegCreate(IR_REG(RSP)), 
+                                  IROperandRegCreate(IR_REG(RBP))));
 
-    IR_PUSH(IRNodeCreate(OP(POP), nullptr, 1, IROperandRegCreate(IR_REG(RBP)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(POP), IROperandRegCreate(IR_REG(RBP))));
 
-    IR_PUSH(IRNodeCreate(OP(RET), nullptr, 1, IROperandImmCreate((long long)info->numberOfFuncParams),
-                                              EMPTY_OPERAND));    
+    IR_PUSH(IRNodeCreate(OP(RET), IROperandImmCreate((long long)info->numberOfFuncParams)));    
 }
 
 static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
@@ -551,11 +548,11 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
     IRBuild(node->left, info);
     IRBuild(node->right, info);
 
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM1)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM1))));
 
-    IR_PUSH(IRNodeCreate(OP(F_CMP), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)),
-                                                IROperandRegCreate(IR_REG(XMM1))));
+    IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)),
+                                    IROperandRegCreate(IR_REG(XMM1))));
 
     static const size_t  maxLabelLen  = 64;
     char comparePushTrue[maxLabelLen] = "";
@@ -585,12 +582,12 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
 
 #undef GENERATE_OPERATION_CMD
 
-    IR_PUSH(IRNodeCreate(jumpOp,     nullptr, 1, IROperandStrCreate(comparePushTrue), EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, IROperandImmCreate(0),               EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(JMP),    nullptr, 1, IROperandStrCreate(compareEnd),      EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(NOP), comparePushTrue, 0, EMPTY_OPERAND, EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, IROperandImmCreate(1),               EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(NOP), compareEnd,      0, EMPTY_OPERAND, EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(jumpOp, IROperandStrCreate(comparePushTrue), true));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandImmCreate(0)));
+    IR_PUSH(IRNodeCreate(OP(JMP), IROperandStrCreate(compareEnd), true));
+    IR_PUSH(IRNodeCreate(comparePushTrue));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandImmCreate(1)));
+    IR_PUSH(IRNodeCreate(compareEnd));
 }
 
 static void BuildNum(const TreeNode* node, CompilerInfoState* info)
@@ -598,10 +595,10 @@ static void BuildNum(const TreeNode* node, CompilerInfoState* info)
     assert(node);
     assert(info);
 
-    IR_PUSH(IRNodeCreate(OP(F_MOV),  nullptr, 2, IROperandRegCreate(IR_REG(XMM0)),
-                                                 IROperandImmCreate(node->value.num)));
+    IR_PUSH(IRNodeCreate(OP(F_MOV), IROperandRegCreate(IR_REG(XMM0)),
+                                    IROperandImmCreate(node->value.num)));
 
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
 }
 
 static void BuildVar(const TreeNode* node, CompilerInfoState* info)
@@ -614,10 +611,10 @@ static void BuildVar(const TreeNode* node, CompilerInfoState* info)
                   NameTableGetName(info->allNamesTable, node->value.nameId), &name);
     assert(name);
 
-    IR_PUSH(IRNodeCreate(OP(F_MOV), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)),
-                                                IROperandMemCreate(name->memShift, name->reg)));
+    IR_PUSH(IRNodeCreate(OP(F_MOV), IROperandRegCreate(IR_REG(XMM0)),
+                                    IROperandMemCreate(name->memShift, name->reg)));
 
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
 }
 
 static void     BuildRead           (const TreeNode* node, CompilerInfoState* info)
@@ -626,7 +623,7 @@ static void     BuildRead           (const TreeNode* node, CompilerInfoState* in
     assert(info);
     assert(info->ir);
 
-    IR_PUSH(IRNodeCreate(OP(F_IN), nullptr, 0, EMPTY_OPERAND, EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_IN)));
 }
 
 static void     BuildPrint          (const TreeNode* node, CompilerInfoState* info)
@@ -638,15 +635,15 @@ static void     BuildPrint          (const TreeNode* node, CompilerInfoState* in
     if (node->left->valueType == TreeNodeValueType::STRING_LITERAL)
     {
         const char* name = NameTableGetName(info->allNamesTable, node->left->value.nameId);
-        IR_PUSH(IRNodeCreate(OP(STR_OUT), nullptr, 1, IROperandStrCreate(name), EMPTY_OPERAND));
+        IR_PUSH(IRNodeCreate(OP(STR_OUT), IROperandStrCreate(name)));
 
         return;
     }
 
     IRBuild(node->left, info);
 
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
-    IR_PUSH(IRNodeCreate(OP(F_OUT), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
+    IR_PUSH(IRNodeCreate(OP(F_OUT), IROperandRegCreate(IR_REG(XMM0))));
 }
 
 //-----------------------------------------------------------------------------
@@ -752,7 +749,8 @@ void IRPushBack  (IR* ir, IRNode* node)
 }
 
 IRNode* IRNodeCreate(IROperation operation, const char* labelName, 
-                     size_t numberOfOperands, IROperand operand1, IROperand operand2)
+                     size_t numberOfOperands, IROperand operand1, IROperand operand2,
+                     bool needPatch)
 {
     IRNode* node = IRNodeCtor();
 
@@ -765,7 +763,29 @@ IRNode* IRNodeCreate(IROperation operation, const char* labelName,
     node->operand1 = operand1;
     node->operand2 = operand2;
 
+    node->needPatch = needPatch;
+
     return node;
+}
+
+IRNode* IRNodeCreate(IROperation operation, IROperand operand1, bool needPatch)
+{
+    return IRNodeCreate(operation, nullptr, 1, operand1, EMPTY_OPERAND, needPatch);
+}
+
+IRNode* IRNodeCreate(IROperation operation, IROperand operand1, IROperand operand2, bool needPatch)
+{
+    return IRNodeCreate(operation, nullptr, 2, operand1, operand2, needPatch);
+}
+
+IRNode* IRNodeCreate(IROperation operation)
+{
+    return IRNodeCreate(operation, nullptr, 0, EMPTY_OPERAND, EMPTY_OPERAND, false);
+}
+
+IRNode* IRNodeCreate(const char* labelName)
+{
+    return IRNodeCreate(OP(NOP), labelName, 0, EMPTY_OPERAND, EMPTY_OPERAND, false);
 }
 
 static inline IROperand IROperandRegCreate(IRRegister reg)

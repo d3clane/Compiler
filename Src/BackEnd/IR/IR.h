@@ -74,7 +74,15 @@ enum class IRErrors
 void IRPushBack(IR* ir, IRNode* node);
 
 IRNode* IRNodeCreate(IROperation operation, const char* labelName, 
-                     size_t numberOfOperands, IROperand operand1, IROperand operand2);
+                     size_t numberOfOperands, IROperand operand1, IROperand operand2,
+                     bool needPatch = false);
+
+IRNode* IRNodeCreate(IROperation operation, IROperand operand1, bool needPatch = false);
+IRNode* IRNodeCreate(IROperation operation, IROperand operand1, IROperand operand2, 
+                     bool needPatch = false);
+IRNode* IRNodeCreate(IROperation operation);
+IRNode* IRNodeCreate(const char* labelName);
+
 
 IR* IRBuild(const Tree* tree, const NameTableType* allNamesTable);
 
