@@ -45,6 +45,11 @@ static inline IR* IRCtor();
 
 static void     BuildIR             (const TreeNode* node, CompilerInfoState* info);
 static void     BuildArithmeticOp   (const TreeNode* node, CompilerInfoState* info);
+static void     BuildComparison     (const TreeNode* node, CompilerInfoState* info);
+static void     BuildWhile          (const TreeNode* node, CompilerInfoState* info);
+static void     BuildIf             (const TreeNode* node, CompilerInfoState* info);
+static void     BuildAssign         (const TreeNode* node, CompilerInfoState* info);
+static void     BuildReturn         (const TreeNode* node, CompilerInfoState* info);
 static void     BuildNum            (const TreeNode* node, CompilerInfoState* info);
 static void     BuildVar            (const TreeNode* node, CompilerInfoState* info);
 static void     BuildRead           (const TreeNode* node, CompilerInfoState* info);
@@ -52,6 +57,7 @@ static void     BuildPrint          (const TreeNode* node, CompilerInfoState* in
 static void     BuildFuncCall       (const TreeNode* node, CompilerInfoState* info);
 static void     PushFuncCallArgs    (const TreeNode* node, CompilerInfoState* info);
 static void     BuildFunc           (const TreeNode* node, CompilerInfoState* info);
+
 static size_t   InitFuncParams      (const TreeNode* node, CompilerInfoState* info);
 static int      InitFuncLocalVars   (const TreeNode* node, CompilerInfoState* info);
 
@@ -96,14 +102,6 @@ static void BuildIR(const TreeNode* node, CompilerInfoState* info)
         BuildVar(node, info);
 
         return;
-
-        assert(!node->left && !node->right);
-
-        Name* varName = nullptr;
-        NameTableFind(info->localTable, info->allNamesTable->data[node->value.nameId].name, &varName);
-        assert(varName);
-
-        //return IROperandCreate(CREATE_VALUE(varName->memShift, varName->reg), TYPE(MEM));
     }
 
     assert(node->valueType == TreeNodeValueType::OPERATION);
@@ -622,6 +620,7 @@ static void BuildVar(const TreeNode* node, CompilerInfoState* info)
     Name* name = nullptr;
     NameTableFind(info->localTable, 
                   NameTableGetName(info->allNamesTable, node->value.nameId), &name);
+    assert(name);
 
     IR_PUSH(IRNodeCreate(OP(F_MOV), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)),
                                                 IROperandMemCreate(name->memShift, name->reg)));
