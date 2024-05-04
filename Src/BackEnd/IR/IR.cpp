@@ -29,22 +29,6 @@ struct CompilerInfoState
 static inline CompilerInfoState CompilerInfoStateCtor();
 static inline void              CompilerInfoStateDtor(CompilerInfoState* info);
 
-static inline IROperandValue IROperandValueCreate(long long imm = 0, 
-                                                  IRRegister reg = IRRegister::NO_REG, 
-                                                  const char* string = nullptr,
-                                                  IRErrors* error = nullptr);
-
-static inline void IROperandValueDtor (IROperandValue* value);
-
-static inline IROperand IROperandCtor();
-static inline IROperand IROperandCreate(IROperandValue val, IROperandType type);
-static inline IRNode*   IRNodeCtor();
-
-static inline IROperand IROperandRegCreate(IRRegister reg);
-static inline IROperand IROperandImmCreate(const long long imm);
-static inline IROperand IROperandStrCreate(const char* str);
-static inline IROperand IROperandMemCreate(const long long imm, IRRegister reg);
-
 static inline IR* IRCtor();
 
 static void     Build               (const TreeNode* node, CompilerInfoState* info);
@@ -724,8 +708,8 @@ static inline void IROperandValueDtor(IROperandValue* value)
     value->string = nullptr;
 }
 
-static inline IROperandValue IROperandValueCreate(long long imm, IRRegister reg, const char* string,
-                                                  IRErrors* error)
+IROperandValue IROperandValueCreate(long long imm, IRRegister reg, const char* string,
+                                    IRErrors* error)
 {
     IROperandValue val = {};
     val.imm  = imm;
@@ -742,7 +726,7 @@ static inline IROperandValue IROperandValueCreate(long long imm, IRRegister reg,
     return val;
 }
 
-static inline IROperand IROperandCtor()
+IROperand IROperandCtor()
 {
     IROperand operand = 
     {
@@ -753,7 +737,7 @@ static inline IROperand IROperandCtor()
     return operand;
 }
 
-static inline IROperand IROperandCreate(IROperandValue val, IROperandType type)
+IROperand IROperandCreate(IROperandValue val, IROperandType type)
 {
     IROperand operand = 
     {
@@ -764,7 +748,7 @@ static inline IROperand IROperandCreate(IROperandValue val, IROperandType type)
     return operand;
 }
 
-static inline IRNode* IRNodeCtor()
+IRNode* IRNodeCtor()
 {
     IRNode* node = (IRNode*)calloc(1, sizeof(*node));
 
@@ -851,22 +835,22 @@ IRNode* IRNodeCreate(const char* labelName)
     return IRNodeCreate(OP(NOP), labelName, 0, EMPTY_OPERAND, EMPTY_OPERAND, false);
 }
 
-static inline IROperand IROperandRegCreate(IRRegister reg)
+IROperand IROperandRegCreate(IRRegister reg)
 {
     return IROperandCreate(CREATE_VALUE(0, reg), TYPE(REG));
 }
 
-static inline IROperand IROperandImmCreate(const long long imm)
+IROperand IROperandImmCreate(const long long imm)
 {
     return IROperandCreate(CREATE_VALUE(imm), TYPE(IMM));
 }
 
-static inline IROperand IROperandStrCreate(const char* str)
+IROperand IROperandStrCreate(const char* str)
 {
     return IROperandCreate(CREATE_VALUE(0, IR_REG(NO_REG), str), TYPE(STR));
 }
 
-static inline IROperand IROperandMemCreate(const long long imm, IRRegister reg)
+IROperand IROperandMemCreate(const long long imm, IRRegister reg)
 {
     return IROperandCreate(CREATE_VALUE(imm, reg), TYPE(MEM));
 }
