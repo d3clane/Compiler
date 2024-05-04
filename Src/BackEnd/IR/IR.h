@@ -6,38 +6,12 @@
 #include "Tree/Tree.h"
 #include "IRRegisters.h"
 
+#define DEF_IR_OP(IR_OP, ...) IR_OP,
 enum class IROperation
 {
-    NOP,
-
-    PUSH, POP, MOV,
-
-    ADD, SUB,
-
-    F_ADD, F_SUB, F_MUL, F_DIV,
-
-    F_AND, F_OR,
-
-    F_POW, F_SQRT, F_SIN, F_COS, F_TAN, F_COT,
-
-    F_PUSH, F_POP, F_MOV,
-
-    F_CMP,
-
-    CMOVE, CMOVNE, CMOVG, CMOVGE, CMOVL, CMOVLE,
-
-    JMP, JE, JNE, JG, JGE, JL, JLE,
-
-    CALL, RET,
-
-    F_OUT, F_IN,
-
-    STR_OUT,
-
-    HLT,
-
     #include "IROperations.h"
 };
+#undef DEF_IR_OP
 
 enum class IROperandType
 {
@@ -102,6 +76,13 @@ void IRPushBack(IR* ir, IRNode* node);
 IRNode* IRNodeCreate(IROperation operation, const char* labelName, 
                      size_t numberOfOperands, IROperand operand1, IROperand operand2);
 
-IR* BuildIR(const Tree* tree, const NameTableType* allNamesTable);
+IR* IRBuild(const Tree* tree, const NameTableType* allNamesTable);
 
+#define IR_TEXT_DUMP(IR, NAME_TABLE) IRTextDump(IR, NAME_TABLE, __FILE__, __func__, __LINE__)
+void IRTextDump(const IR* ir, const NameTableType* allNamesTable, 
+                const char* fileName, const char* funcName, const int line);
+
+void IROperandTextDump(const IROperand operand);
+
+const char* IRGetOperationName(IROperation operation);
 #endif

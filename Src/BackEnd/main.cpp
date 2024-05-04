@@ -19,5 +19,6 @@ int main(int argc, char* argv[])
 
     //TreeGraphicDump(&tree, true, allNamesTable);
 
-    IR* ir = BuildIR(&tree, allNamesTable);
+    IR* ir = IRBuild(&tree, allNamesTable);
+    IR_TEXT_DUMP(ir, allNamesTable);
 }

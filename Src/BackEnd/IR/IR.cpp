@@ -6,6 +6,7 @@
 
 #include "IR.h"
 #include "Tree/NameTable/NameTable.h"
+#include "Common/Log.h"
 
 struct CompilerInfoState
 {
@@ -43,7 +44,7 @@ static inline IROperand IROperandMemCreate(const long long imm, IRRegister reg);
 
 static inline IR* IRCtor();
 
-static void     BuildIR             (const TreeNode* node, CompilerInfoState* info);
+static void     IRBuild             (const TreeNode* node, CompilerInfoState* info);
 static void     BuildArithmeticOp   (const TreeNode* node, CompilerInfoState* info);
 static void     BuildComparison     (const TreeNode* node, CompilerInfoState* info);
 static void     BuildWhile          (const TreeNode* node, CompilerInfoState* info);
@@ -68,7 +69,7 @@ static int      InitFuncLocalVars   (const TreeNode* node, CompilerInfoState* in
 #define IR_PUSH(NODE)      IRPushBack(info->ir, NODE)
 #define CREATE_VALUE(...)  IROperandValueCreate(__VA_ARGS__)
 
-IR* BuildIR(const Tree* tree, const NameTableType* allNamesTable)
+IR* IRBuild(const Tree* tree, const NameTableType* allNamesTable)
 {
     assert(tree);
     assert(allNamesTable);
@@ -79,14 +80,14 @@ IR* BuildIR(const Tree* tree, const NameTableType* allNamesTable)
     info.allNamesTable = allNamesTable;
     info.ir = ir;
     
-    BuildIR(tree->root, &info);
+    IRBuild(tree->root, &info);
 
     IRPushBack(ir, IRNodeCreate(OP(HLT), nullptr, 0, EMPTY_OPERAND, EMPTY_OPERAND));
 
     return ir;
 }
 
-static void BuildIR(const TreeNode* node, CompilerInfoState* info)
+static void IRBuild(const TreeNode* node, CompilerInfoState* info)
 {
     if (node == nullptr)
         return;
@@ -128,8 +129,8 @@ static void BuildIR(const TreeNode* node, CompilerInfoState* info)
         case TreeOperationId::TYPE:
         case TreeOperationId::LINE_END:
         {
-            BuildIR(node->left,  info);
-            BuildIR(node->right, info);
+            IRBuild(node->left,  info);
+            IRBuild(node->right, info);
             break;
         }
 
@@ -216,10 +217,10 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
     case TreeOperationId::OPERATION_ID:                                                         \
     {                                                                                           \
         assert(CHILDREN_CNT > 0);                                                               \
-        BuildIR(node->left, info);                                                              \
+        IRBuild(node->left, info);                                                              \
         if (CHILDREN_CNT == 2)                                                                  \
         {                                                                                       \
-            BuildIR(node->right, info);                                                         \
+            IRBuild(node->right, info);                                                         \
             IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, operand2, EMPTY_OPERAND));              \
         }                                                                                       \
         else operand2 = EMPTY_OPERAND;                                                          \
@@ -280,7 +281,7 @@ static void BuildFunc(const TreeNode* node, CompilerInfoState* info)
     IR_PUSH(IRNodeCreate(OP(ADD), nullptr, 2, IROperandRegCreate(IR_REG(RSP)), 
                                               IROperandImmCreate((long long)rspShift)));
 
-    BuildIR(funcNameNode->right, info);
+    IRBuild(funcNameNode->right, info);
 }
 
 // Pascal decl
@@ -292,7 +293,7 @@ static size_t InitFuncParams(const TreeNode* node, CompilerInfoState* info)
 
     if (node == nullptr)
         return 0;
-        
+
     if (node->valueType == TreeNodeValueType::NAME)
     {
         Name pushName = {};
@@ -449,10 +450,10 @@ static void BuildIf(const TreeNode* node, CompilerInfoState* info)
     char ifEndLabel[maxLabelLen] = "";
     snprintf(ifEndLabel, maxLabelLen, "END_IF_%zu", id);
 
-    BuildIR(node->left, info);
+    IRBuild(node->left, info);
     
 
-    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
+    IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
     
     IR_PUSH(IRNodeCreate(OP(F_CMP), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)), 
                                                 IROperandImmCreate(0)));
@@ -460,7 +461,7 @@ static void BuildIf(const TreeNode* node, CompilerInfoState* info)
     IR_PUSH(IRNodeCreate(OP(JE), nullptr, 1, IROperandStrCreate(ifEndLabel), 
                                              EMPTY_OPERAND));
 
-    BuildIR(node->right, info);
+    IRBuild(node->right, info);
 
     IR_PUSH(IRNodeCreate(OP(NOP), ifEndLabel, 0, EMPTY_OPERAND, EMPTY_OPERAND));
 }
@@ -484,7 +485,7 @@ static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
 
     IR_PUSH(IRNodeCreate(OP(NOP), whileBeginLabel, 0, EMPTY_OPERAND, EMPTY_OPERAND));
 
-    BuildIR(node->left, info);
+    IRBuild(node->left, info);
 
     IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 2, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
     
@@ -493,7 +494,7 @@ static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
                                                
     IR_PUSH(IRNodeCreate(OP(JE), nullptr, 1, IROperandStrCreate(whileEndLabel), EMPTY_OPERAND));
 
-    BuildIR(node->right, info);
+    IRBuild(node->right, info);
 
     IR_PUSH(IRNodeCreate(OP(JMP), nullptr, 1, IROperandStrCreate(whileBeginLabel), EMPTY_OPERAND));
 
@@ -516,7 +517,7 @@ static void BuildAssign(const TreeNode* node, CompilerInfoState* info)
 
     assert(varName);
 
-    BuildIR(node->right, info);
+    IRBuild(node->right, info);
 
     IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
     IR_PUSH(IRNodeCreate(OP(F_MOV), nullptr, 2, IROperandMemCreate(varName->memShift, varName->reg),
@@ -529,7 +530,7 @@ static void BuildReturn(const TreeNode* node, CompilerInfoState* info)
     assert(info);
     assert(info->ir);
 
-    BuildIR(node->left, info);
+    IRBuild(node->left, info);
     
     IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
 
@@ -547,8 +548,8 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
     assert(node);
     assert(info->allNamesTable);
 
-    BuildIR(node->left, info);
-    BuildIR(node->right, info);
+    IRBuild(node->left, info);
+    IRBuild(node->right, info);
 
     IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
     IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM1)), EMPTY_OPERAND));
@@ -642,7 +643,7 @@ static void     BuildPrint          (const TreeNode* node, CompilerInfoState* in
         return;
     }
 
-    BuildIR(node->left, info);
+    IRBuild(node->left, info);
 
     IR_PUSH(IRNodeCreate(OP(F_POP), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
     IR_PUSH(IRNodeCreate(OP(F_OUT), nullptr, 1, IROperandRegCreate(IR_REG(XMM0)), EMPTY_OPERAND));
@@ -812,4 +813,226 @@ static inline void              CompilerInfoStateDtor(CompilerInfoState* info)
     info->memShift           = 0;
     info->numberOfFuncParams = 0;
     info->regShift           = IR_REG(NO_REG);
+}
+
+
+static inline void CreateImgInLogFile(const size_t imgIndex, bool openImg)
+{
+    static const size_t maxImgNameLength  = 64;
+    static char imgName[maxImgNameLength] = "";
+    snprintf(imgName, maxImgNameLength, "../imgs/img_%zu_time_%s.png", imgIndex, __TIME__);
+
+    static const size_t     maxCommandLength  = 128;
+    static char commandName[maxCommandLength] =  "";
+    snprintf(commandName, maxCommandLength, "dot TreeHandler.dot -T png -o %s", imgName);
+    system(commandName);
+
+    snprintf(commandName, maxCommandLength, "<img src = \"%s\">\n", imgName);    
+    Log(commandName);
+
+    if (openImg)
+    {
+        snprintf(commandName, maxCommandLength, "open %s", imgName);
+        system(commandName);
+    }
+}
+
+//---------------------------------------------------------------------------------------
+
+/*
+static inline void DotFileBegin(FILE* outDotFile)
+{
+    fprintf(outDotFile, "digraph G{\nrankdir=TB;\ngraph [bgcolor=\"#31353b\"];\n"
+                        "edge[color=\"#00D0D0\"];\n");
+}
+
+static inline void DotFileEnd(FILE* outDotFile)
+{
+    fprintf(outDotFile, "\n}\n");
+}
+
+void IRGraphicDump(const IR* ir, bool openImg, const NameTableType* nameTable)
+{
+    assert(ir);
+    assert(nameTable);
+
+    static const char* dotFileName = "IR.dot";
+    FILE* outDotFile = fopen(dotFileName, "w");
+
+    if (outDotFile == nullptr)
+        return;
+
+    DotFileBegin(outDotFile);
+
+    assert(ir->end);
+    IRNode* irBegin = ir->end->nextNode;
+
+    DotFileCreateNodes(irBegin, outDotFile, nameTable);
+
+    IRGraphicDump(irBegin, outDotFile);
+
+    DotFileEnd(outDotFile);
+
+    fclose(outDotFile);
+
+    static size_t imgIndex = 0;
+    CreateImgInLogFile(imgIndex, openImg);
+    imgIndex++;
+}
+
+static void DotFileCreateNodes(const IRNode* node, FILE* outDotFile,
+                               const NameTableType* nameTable)
+{
+    assert(outDotFile);
+
+    if (node == nullptr)
+        return;
+    
+
+    fprintf(outDotFile, "node%p[shape=Mrecord, style=filled, fillcolor=\"89AC76\","
+                        "label =\"", node);
+    if (node->labelName)
+        fprintf(outDotFile, "labelName - %s |", node->labelName);
+
+    if (node->numberOfOperands > 0)
+        fprintf(outDotFile, "")
+                  
+
+    fprintf(outDotFile, ""
+    if (node. == TreeNodeValueType::OPERATION)
+    {
+        //printf("OP: %s\n", TreeOperationGetLongName(node->value.operation));
+        fprintf(outDotFile, "fillcolor=\"#89AC76\", label = \"%s\", ", 
+                            TreeOperationGetLongName(node->value.operation));
+    }
+    else if (node->valueType == TreeNodeValueType::NUM)
+    {
+        //printf("VAL: %d\n", node->value.value);
+        fprintf(outDotFile, "fillcolor=\"#7293ba\", label = \"%d\", ", node->value.num);
+    }
+    else if (node->valueType == TreeNodeValueType::NAME)
+    {
+        fprintf(outDotFile, "fillcolor=\"#78DBE2\", label = \"%s\", ",
+                                nameTable->data[node->value.nameId].name);
+    }
+    else if (node->valueType == TreeNodeValueType::STRING_LITERAL)
+    {
+        fprintf(outDotFile, "fillcolor=\"#78DBE2\", label = %s, ",
+                                nameTable->data[node->value.nameId].name);   
+    }
+    else 
+        fprintf(outDotFile, "fillcolor=\"#FF0000\", label = \"ERROR\", ");
+
+    fprintf(outDotFile, "color = \"#D0D000\"];\n");
+    
+    const NameTableType* localNameTable = nameTable;
+
+    if (node->valueType == TreeNodeValueType::NAME && 
+        nameTable->data[node->value.nameId].localNameTable)
+    {
+        localNameTable = (NameTableType*)nameTable->data[node->value.nameId].localNameTable;
+    }
+
+    DotFileCreateNodes(node->left,  outDotFile, localNameTable);
+    DotFileCreateNodes(node->right, outDotFile, localNameTable);
+}
+
+static void IRGraphicDump(const IRNode* node, FILE* outDotFile)
+{
+    if (node == nullptr)
+    {
+        fprintf(outDotFile, "\n");
+        return;
+    }
+    
+    fprintf(outDotFile, "node%p;\n", node);
+
+    if (node->left != nullptr) fprintf(outDotFile, "node%p->", node);
+    TreeGraphicDump(node->left, outDotFile);
+
+    if (node->right != nullptr) fprintf(outDotFile, "node%p->", node);
+    TreeGraphicDump(node->right, outDotFile);
+}
+*/
+
+//---------------------------------------------------------------------------------------
+
+void IRTextDump(const IR* ir, const NameTableType* allNamesTable, 
+                const char* fileName, const char* funcName, const int line)
+{
+    assert(ir);
+    assert(fileName);
+    assert(funcName);
+    assert(allNamesTable);
+
+    LogBegin(fileName, funcName, line);
+
+    assert(ir->end);
+    IRNode* beginNode = ir->end->nextNode;
+    IRNode* node = beginNode;
+
+    do
+    {
+        Log("---------------\n");
+        Log("Operation - %s\n", IRGetOperationName(node->operation));    
+
+        if (node->labelName) Log("Label name - %s\n", node->labelName);
+        
+        if (node->numberOfOperands > 0) IROperandTextDump(node->operand1);
+        if (node->numberOfOperands > 1) IROperandTextDump(node->operand2);
+
+        node = node->nextNode;
+    } while (node != beginNode);
+    
+    LogEnd(fileName, funcName, line);
+}
+
+void IROperandTextDump(const IROperand operand)
+{
+    switch (operand.type)
+    {
+        case TYPE(IMM):
+            Log("IMM: \n");
+            break;
+        case TYPE(REG):
+            Log("REG: \n");
+            break;
+        case TYPE(MEM):
+            Log("MEM: \n");
+            break;
+        case TYPE(STR):
+            Log("STR \n");
+            break;
+
+        default: // Unreachable
+            assert(false);
+            break;
+    }
+
+    Log("\t imm - %d\n"
+        "\t reg - %s\n",
+        operand.value.imm, IRRegisterGetName(operand.value.reg));
+
+    if (operand.value.string) Log("\t str - %s\n", operand.value.string);
+    else                      Log("\t str - null\n");
+}
+
+const char* IRGetOperationName(IROperation operation)
+{
+    #define DEF_IR_OP(OP_NAME, ...)     \
+        case IROperation::OP_NAME:      \
+            return #OP_NAME;            
+
+    switch (operation)
+    {
+        #include "IROperations.h"
+
+        default:    // Unreachable
+            assert(false);
+            return nullptr;
+    }
+
+    // Unreachable
+    assert(false);
+    return nullptr;
 }

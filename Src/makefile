@@ -39,7 +39,7 @@ FAST_INPUT_CPP = InputOutput.cpp StringFuncs.cpp
 FAST_INPUT_OBJ = $(FAST_INPUT_CPP:%.cpp=$(OBJECTDIR)/$(FAST_INPUT_DIR)_%.o)
 
 BACK_END_IR_DIR = BackEnd/IR
-BACK_END_IR_CPP = IR.cpp
+BACK_END_IR_CPP = IR.cpp IRRegisters.cpp
 BACK_END_IR_OBJ = $(BACK_END_IR_CPP:%.cpp=$(OBJECTDIR)/%.o)
 
 BACK_END_DIR = BackEnd
