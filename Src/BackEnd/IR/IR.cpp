@@ -1056,3 +1056,10 @@ const char* IRGetOperationName(IROperation operation)
     assert(false);
     return nullptr;
 }
+
+#undef TYPE(IR_TYPE)
+#undef IR_REG(REG_NAME)
+#undef OP(OP_NAME)
+#undef EMPTY_OPERAND
+#undef IR_PUSH(NODE)
+#undef CREATE_VALUE(...)
