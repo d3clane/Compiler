@@ -72,7 +72,7 @@ char* ReadText(FILE* const inStream)
     if (fileSize == 0)
         return nullptr;
 
-    const size_t bufSize = (size_t) fileSize + 1;
+    const size_t bufSize = fileSize + 1;
 
     char* text = (char*) calloc(bufSize, sizeof(*text)); 
 

@@ -16,7 +16,7 @@ struct CompilerInfoState
 
     size_t labelId;
 
-    size_t     memShift;
+    int        memShift;
     IRRegister regShift;
 
     size_t numberOfFuncParams;
@@ -68,7 +68,7 @@ static int      InitFuncLocalVars   (const TreeNode* node, CompilerInfoState* in
 #define IR_PUSH(NODE)      IRPushBack(info->ir, NODE)
 #define CREATE_VALUE(...)  IROperandValueCreate(__VA_ARGS__)
 
-IR* BuildIR(Tree* tree, const NameTableType* allNamesTable)
+IR* BuildIR(const Tree* tree, const NameTableType* allNamesTable)
 {
     assert(tree);
     assert(allNamesTable);
@@ -212,7 +212,7 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
     IROperand operand1 = IROperandRegCreate(IR_REG(XMM0));
     IROperand operand2 = IROperandRegCreate(IR_REG(XMM1));
 
-#define GENERATE_OPERATION_CMD(OPERATION_ID, EMPTY1, CHILDREN_CNT, ...)                         \
+#define GENERATE_OPERATION_CMD(OPERATION_ID, _1, CHILDREN_CNT, ARITHM_OP, ...)              \
     case TreeOperationId::OPERATION_ID:                                                         \
     {                                                                                           \
         assert(CHILDREN_CNT > 0);                                                               \
@@ -224,8 +224,8 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
         }                                                                                       \
         else operand2 = EMPTY_OPERAND;                                                          \
                                                                                                 \
-        IR_PUSH(IRNodeCreate(OP(F_POP),            nullptr, 1, operand1, EMPTY_OPERAND));       \
-        IR_PUSH(IRNodeCreate(OP(F_##OPERATION_ID), nullptr, 2, operand1, operand2));            \
+        IR_PUSH(IRNodeCreate(OP(F_POP),     nullptr, 1, operand1, EMPTY_OPERAND));              \
+        IR_PUSH(IRNodeCreate(OP(ARITHM_OP), nullptr, 2, operand1, operand2));                   \
         break;                                                                                  \
     }
 
@@ -316,7 +316,7 @@ static size_t InitFuncParams(const TreeNode* node, CompilerInfoState* info)
         {
             size_t cntRight = InitFuncParams(node->right, info);
 
-            info->memShift += XMM_REG_BYTE_SIZE;
+            info->memShift += (int)XMM_REG_BYTE_SIZE;
 
             return cntRight + InitFuncParams(node->left, info);
         }
@@ -565,33 +565,22 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
     IROperation jumpOp = IROperation::JMP;
 
     // TODO: think about code gen 
+
+#define GENERATE_OPERATION_CMD(OPERATION_ID, _1, _2, _3, IR_JMP_OP, ...)        \
+    case TreeOperationId::OPERATION_ID:                                         \
+        jumpOp = OP(IR_JMP_OP);                                                 \
+        break;                                                                  \
+
     switch (node->value.operation)
     {
-        case TreeOperationId::EQ:
-            jumpOp = OP(JE);
-            break;
-        case TreeOperationId::NOT_EQ:
-            jumpOp = OP(JNE);
-            break;
-
-        case TreeOperationId::LESS:
-            jumpOp = OP(JL);
-            break;
-        case TreeOperationId::LESS_EQ:
-            jumpOp = OP(JLE);
-            break;
-
-        case TreeOperationId::GREATER:
-            jumpOp = OP(JG);
-            break;
-        case TreeOperationId::GREATER_EQ:
-            jumpOp = OP(JGE);
-            break;    
+        #include "Tree/Operations.h"    // building cases
 
         default: // Unreachable
             assert(false);
-            break;
+            break;  
     }
+
+#undef GENERATE_OPERATION_CMD
 
     IR_PUSH(IRNodeCreate(jumpOp,     nullptr, 1, IROperandStrCreate(comparePushTrue), EMPTY_OPERAND));
     IR_PUSH(IRNodeCreate(OP(F_PUSH), nullptr, 1, IROperandImmCreate(0),               EMPTY_OPERAND));
@@ -678,8 +667,8 @@ static inline IROperandValue IROperandValueCreate(long long imm, IRRegister reg,
                                                   IRErrors* error)
 {
     IROperandValue val = {};
-    val.imm   = imm;
-    val.reg = IRRegister::NO_REG;
+    val.imm  = imm;
+    val.reg  = reg;
     
     if (string)
     {

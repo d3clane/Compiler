@@ -18,7 +18,7 @@ enum class IROperation
 
     F_AND, F_OR,
 
-    F_SQRT, F_SIN, F_COS, F_TAN, F_COT,
+    F_POW, F_SQRT, F_SIN, F_COS, F_TAN, F_COT,
 
     F_PUSH, F_POP, F_MOV,
 

@@ -109,7 +109,7 @@ void TreeNodeDtor(TreeNode* node)
 {
     node->left         = nullptr;
     node->right        = nullptr;
-    node->value.nameId  =      -1;
+    node->value.nameId = 0;
 
     free(node);
 }
@@ -359,7 +359,7 @@ TreeNodeValue TreeCreateOpVal(TreeOperationId operation)
     return value;
 }
 
-TreeNodeValue TreeCreateNameVal(int nameId)
+TreeNodeValue TreeCreateNameVal(size_t nameId)
 {
     TreeNodeValue value = 
     {
@@ -378,14 +378,14 @@ TreeNode* TreeNumNodeCreate(int value)
     return TreeNodeCreate(nodeVal, TreeNodeValueType::NUM);
 }
 
-TreeNode* TreeNameNodeCreate(int nameId)
+TreeNode* TreeNameNodeCreate(size_t nameId)
 {
     TreeNodeValue nodeVal  = TreeCreateNameVal(nameId);
 
     return TreeNodeCreate(nodeVal, TreeNodeValueType::NAME);
 }
 
-TreeNode* TreeStringLiteralNodeCreate(int literalId)
+TreeNode* TreeStringLiteralNodeCreate(size_t literalId)
 {
     TreeNodeValue nodeVal  = TreeCreateNameVal(literalId);
 
@@ -580,10 +580,10 @@ static const char* TreeReadNodeValue(TreeNodeValue* value, TreeNodeValueType* va
         return stringPtr;
     }
 
-    Name* varInNameTablePtr = nullptr;
-    NameTableFind(allNamesTable, inputString, &varInNameTablePtr);
+    Name* varName = nullptr;
+    NameTableFind(allNamesTable, inputString, &varName);
 
-    if (varInNameTablePtr == nullptr)
+    if (varName == nullptr)
     {
         Name pushName = {};
         NameCtor(&pushName, inputString, nullptr, 0, IRRegister::NO_REG);
@@ -594,10 +594,10 @@ static const char* TreeReadNodeValue(TreeNodeValue* value, TreeNodeValueType* va
     }
     else 
     {
-        size_t varInNameTablePos = -1;
-        NameTableGetPos(allNamesTable, varInNameTablePtr, &varInNameTablePos);
+        size_t varNamePos = 0;
+        NameTableGetPos(allNamesTable, varName, &varNamePos);
 
-        *value = TreeCreateNameVal((int)varInNameTablePos);
+        *value = TreeCreateNameVal(varNamePos);
     }
 
     *valueType   = TreeNodeValueType::NAME;
