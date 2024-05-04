@@ -42,6 +42,10 @@ BACK_END_IR_DIR = BackEnd/IR
 BACK_END_IR_CPP = IR.cpp IRRegisters.cpp
 BACK_END_IR_OBJ = $(BACK_END_IR_CPP:%.cpp=$(OBJECTDIR)/%.o)
 
+IR_LABEL_TABLE_DIR = BackEnd/IR/LabelTable
+IR_LABEL_TABLE_CPP = LabelTable.cpp LabelTableArrayFuncs.cpp LabelTableHashFuncs.cpp
+IR_LABEL_TABLE_OBJ = $(IR_LABEL_TABLE_CPP:%.cpp=$(OBJECTDIR)/%.o)
+
 BACK_END_DIR = BackEnd
 BACK_END_CPP = main.cpp
 BACK_END_OBJ = $(BACK_END_CPP:%.cpp=$(OBJECTDIR)/%.o)
@@ -52,7 +56,8 @@ all: $(PROGRAMDIR)/$(TARGET)
 	rm -rf ../Program/$(TARGET)
 	cp $(PROGRAMDIR)/$(TARGET) ../Program/
 
-$(PROGRAMDIR)/$(TARGET): $(TREE_OBJ) $(TREE_NAME_TABLE_OBJ) $(COMMON_OBJ) $(BACK_END_OBJ) $(BACK_END_IR_OBJ) $(FAST_INPUT_OBJ)
+$(PROGRAMDIR)/$(TARGET): $(TREE_OBJ) $(TREE_NAME_TABLE_OBJ) $(COMMON_OBJ) \
+						 $(BACK_END_OBJ) $(BACK_END_IR_OBJ) $(IR_LABEL_TABLE_OBJ) $(FAST_INPUT_OBJ)
 	$(CXX) $^ -o $(PROGRAMDIR)/$(TARGET) $(CXXFLAGS)
 
 $(OBJECTDIR)/%.o : $(TREE_DIR)/%.cpp
@@ -71,6 +76,9 @@ $(OBJECTDIR)/%.o : $(BACK_END_DIR)/%.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) 
 
 $(OBJECTDIR)/%.o : $(BACK_END_IR_DIR)/%.cpp
+	$(CXX) -c $< -o $@ $(CXXFLAGS) 
+
+$(OBJECTDIR)/%.o : $(IR_LABEL_TABLE_DIR)/%.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) 
 
 docs: 
