@@ -49,7 +49,8 @@ BACK_END_OBJ = $(BACK_END_CPP:%.cpp=$(OBJECTDIR)/%.o)
 .PHONY: all docs clean buildDirs
 
 all: $(PROGRAMDIR)/$(TARGET)
-	#@cp $(PROGRAMDIR)/$(TARGET) ../
+	rm -rf ../Program/$(TARGET)
+	cp $(PROGRAMDIR)/$(TARGET) ../Program/
 
 $(PROGRAMDIR)/$(TARGET): $(TREE_OBJ) $(TREE_NAME_TABLE_OBJ) $(COMMON_OBJ) $(BACK_END_OBJ) $(BACK_END_IR_OBJ) $(FAST_INPUT_OBJ)
 	$(CXX) $^ -o $(PROGRAMDIR)/$(TARGET) $(CXXFLAGS)

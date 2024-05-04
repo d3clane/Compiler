@@ -314,8 +314,8 @@ NameTableErrors NameTableGetPos(const NameTableType* table, Name* namePtr, size_
     assert(table);
     assert(namePtr);
     assert(outPos);
-    assert(namePtr > table->data);
-    
+    assert(namePtr >= table->data);
+
     *outPos = (size_t)(namePtr - table->data);
 
     return NameTableErrors::NO_ERR;

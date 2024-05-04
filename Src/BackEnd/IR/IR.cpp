@@ -286,11 +286,13 @@ static void BuildFunc(const TreeNode* node, CompilerInfoState* info)
 // Pascal decl
 static size_t InitFuncParams(const TreeNode* node, CompilerInfoState* info)
 {
-    assert(node);
     assert(info);
     assert(info->localTable);
     assert(info->allNamesTable);
 
+    if (node == nullptr)
+        return 0;
+        
     if (node->valueType == TreeNodeValueType::NAME)
     {
         Name pushName = {};
