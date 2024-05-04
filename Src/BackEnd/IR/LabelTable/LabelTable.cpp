@@ -235,6 +235,7 @@ LabelTableErrors LabelTableDtor(LabelTableType* const labelTable)
     
     for (size_t i = 0; i < labelTable->size; ++i)
     {
+        free(labelTable->data[i].label);
         labelTable->data[i] = LABEL_TABLE_POISON;
     }
 
@@ -648,6 +649,6 @@ void LabelTablePrintError(LabelTableErrors error)
 
 void LabelTableValueCtor(LabelTableValue* value, const char* string, IRNode* connectedNode)
 {
-    value->label         = string;
+    value->label         = strdup(string);
     value->connectedNode = connectedNode;
 }

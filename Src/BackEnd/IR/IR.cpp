@@ -270,7 +270,7 @@ static void BuildFunc(const TreeNode* node, CompilerInfoState* info)
 
     TreeNode* funcNameNode = node->left;
 
-    IR_PUSH(IRNodeCreate(NameTableGetName(info->allNamesTable, funcNameNode->value.nameId)));
+    IR_PUSH_LABEL(NameTableGetName(info->allNamesTable, funcNameNode->value.nameId));
 
     IR_PUSH(IRNodeCreate(OP(PUSH), IROperandRegCreate(IR_REG(RBP))));
     IR_PUSH(IRNodeCreate(OP(MOV),  IROperandRegCreate(IR_REG(RBP)), 
@@ -681,6 +681,7 @@ static void PatchJumps(IR* ir, const LabelTableType* labelTable)
             LabelTableValue* outLabel = nullptr;
             LabelTableFind(labelTable, node->operand1.value.string, &outLabel);
 
+            assert(outLabel);
             assert(outLabel->connectedNode);
             assert(outLabel->connectedNode->nextNode);
 

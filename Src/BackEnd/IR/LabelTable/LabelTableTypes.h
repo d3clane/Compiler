@@ -12,8 +12,8 @@
 
 struct LabelTableValue
 {
-    const char*   label;
-    IRNode*       connectedNode;
+    char*   label;
+    IRNode* connectedNode;
 };
 
 /// @brief Chosen LABEL_TABLE_POISON value for stack
