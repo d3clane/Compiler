@@ -65,7 +65,7 @@ static void     BuildFunc           (const TreeNode* node, CompilerInfoState* in
 static size_t   InitFuncParams      (const TreeNode* node, CompilerInfoState* info);
 static int      InitFuncLocalVars   (const TreeNode* node, CompilerInfoState* info);
 
-static void PatchJumps(IR* ir);
+static void PatchJumps(IR* ir, const LabelTableType* labelTable);
 
 #define TYPE(IR_TYPE)      IROperandType::IR_TYPE
 #define IR_REG(REG_NAME)   IRRegister::REG_NAME  
@@ -80,6 +80,13 @@ do                                                              \
     LabelTableValue tmpLabelVal = {};                           \
     LabelTableValueCtor(&tmpLabelVal, NAME, info->ir->end);     \
     LabelTablePush(info->labelTable, tmpLabelVal);              \
+} while (0)
+
+#define IR_PUSH_LABEL(NAME)                                     \
+do                                                              \
+{                                                               \
+    IRPushBack(info->ir, IRNodeCreate(NAME));                   \
+    LABEL_PUSH(NAME);                                           \
 } while (0)
 
 
@@ -101,6 +108,10 @@ IR* IRBuild(const Tree* tree, const NameTableType* allNamesTable)
     Build(tree->root, &info);
 
     IRPushBack(ir, IRNodeCreate(OP(HLT)));
+
+    PatchJumps(ir, info.labelTable);
+
+    CompilerInfoStateDtor(&info);
 
     return ir;
 }
@@ -398,7 +409,6 @@ static void BuildFuncCall(const TreeNode* node, CompilerInfoState* info)
     const char* funcName = NameTableGetName(info->allNamesTable, node->left->value.nameId);
 
     IR_PUSH(IRNodeCreate(OP(CALL), IROperandStrCreate(funcName), true));
-    LABEL_PUSH(funcName);
 
     // pushing ret value on stack
     IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
@@ -477,11 +487,10 @@ static void BuildIf(const TreeNode* node, CompilerInfoState* info)
                                     IROperandImmCreate(0)));
 
     IR_PUSH(IRNodeCreate(OP(JE), IROperandStrCreate(ifEndLabel), true));
-    LABEL_PUSH(ifEndLabel);
 
     Build(node->right, info);
 
-    IR_PUSH(IRNodeCreate(ifEndLabel));
+    IR_PUSH_LABEL(ifEndLabel);
 }
 
 static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
@@ -501,7 +510,7 @@ static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
     snprintf(whileBeginLabel, maxLabelLen, "WHILE_%zu",     id);
     snprintf(whileEndLabel,   maxLabelLen, "END_WHILE_%zu", id);
 
-    IR_PUSH(IRNodeCreate(whileBeginLabel));
+    IR_PUSH_LABEL(whileBeginLabel);
 
     Build(node->left, info);
 
@@ -511,14 +520,12 @@ static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
                                     IROperandImmCreate(0)));
                                                
     IR_PUSH(IRNodeCreate(OP(JE), IROperandStrCreate(whileEndLabel), true));
-    LABEL_PUSH(whileEndLabel);
 
     Build(node->right, info);
 
     IR_PUSH(IRNodeCreate(OP(JMP), IROperandStrCreate(whileBeginLabel), true));
-    LABEL_PUSH(whileBeginLabel);
 
-    IR_PUSH(IRNodeCreate(whileEndLabel));
+    IR_PUSH_LABEL(whileEndLabel);
 }
 
 static void BuildAssign(const TreeNode* node, CompilerInfoState* info)
@@ -605,16 +612,14 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
 #undef GENERATE_OPERATION_CMD
 
     IR_PUSH(IRNodeCreate(jumpOp, IROperandStrCreate(comparePushTrue), true));
-    LABEL_PUSH(comparePushTrue);
-
     IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandImmCreate(0)));
-
     IR_PUSH(IRNodeCreate(OP(JMP), IROperandStrCreate(compareEnd), true));
-    LABEL_PUSH(compareEnd);
 
-    IR_PUSH(IRNodeCreate(comparePushTrue));
+    IR_PUSH_LABEL(comparePushTrue);
+
     IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandImmCreate(1)));
-    IR_PUSH(IRNodeCreate(compareEnd));
+
+    IR_PUSH_LABEL(compareEnd);
 }
 
 static void BuildNum(const TreeNode* node, CompilerInfoState* info)
@@ -663,7 +668,6 @@ static void     BuildPrint          (const TreeNode* node, CompilerInfoState* in
     {
         const char* name = NameTableGetName(info->allNamesTable, node->left->value.nameId);
         IR_PUSH(IRNodeCreate(OP(STR_OUT), IROperandStrCreate(name)));
-        LABEL_PUSH(name);
 
         return;
     }
@@ -676,7 +680,7 @@ static void     BuildPrint          (const TreeNode* node, CompilerInfoState* in
 
 //-----------------------------------------------------------------------------
 
-static void PatchJumps(IR* ir, LabelTableType* labelTable)
+static void PatchJumps(IR* ir, const LabelTableType* labelTable)
 {
     assert(ir);
     assert(ir->end);
@@ -684,9 +688,23 @@ static void PatchJumps(IR* ir, LabelTableType* labelTable)
     IRNode* beginNode = ir->end->nextNode;
     IRNode* node      = beginNode;
 
+    do
+    {
+        if (node->needPatch && !node->jumpTarget)
+        {
+            assert(node->operand1.type == TYPE(STR));
 
-    //LabelTableFind()
-        
+            LabelTableValue* outLabel = nullptr;
+            LabelTableFind(labelTable, node->operand1.value.string, &outLabel);
+
+            assert(outLabel->connectedNode);
+            assert(outLabel->connectedNode->nextNode);
+
+            node->jumpTarget = outLabel->connectedNode->nextNode;
+        }
+
+        node = node->nextNode;
+    } while (node != beginNode);
 }
 
 //-----------------------------------------------------------------------------
@@ -696,7 +714,7 @@ static inline void IROperandValueDtor(IROperandValue* value)
     if (!value)
         return;
 
-    value->imm   = 0;
+    value->imm = 0;
     value->reg = IRRegister::NO_REG;
 
     if (!value->string)
@@ -855,17 +873,18 @@ static inline IROperand IROperandMemCreate(const long long imm, IRRegister reg)
 
 static inline CompilerInfoState CompilerInfoStateCtor()
 {
-    CompilerInfoState state  = {};
-    state.allNamesTable      = nullptr;
-    state.localTable         = nullptr;
-    state.ir                 = nullptr;
+    CompilerInfoState info  = {};
+    info.allNamesTable      = nullptr;
+    info.localTable         = nullptr;
+    info.ir                 = nullptr;
+    info.labelTable         = nullptr;
 
-    state.labelId            = 0;
-    state.memShift           = 0;
-    state.numberOfFuncParams = 0;
-    state.regShift           = IR_REG(NO_REG);
+    info.labelId            = 0;
+    info.memShift           = 0;
+    info.numberOfFuncParams = 0;
+    info.regShift           = IR_REG(NO_REG);
     
-    return state;
+    return info;
 }
 
 static inline void              CompilerInfoStateDtor(CompilerInfoState* info)
@@ -873,6 +892,7 @@ static inline void              CompilerInfoStateDtor(CompilerInfoState* info)
     info->allNamesTable      = nullptr;
     info->localTable         = nullptr;
     info->ir                 = nullptr;
+    info->labelTable         = nullptr;
 
     info->labelId            = 0;
     info->memShift           = 0;
