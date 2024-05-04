@@ -693,7 +693,7 @@ static void PatchJumps(IR* ir, const LabelTableType* labelTable)
 
 //-----------------------------------------------------------------------------
 
-static inline void IROperandValueDtor(IROperandValue* value)
+void IROperandValueDtor(IROperandValue* value)
 {
     if (!value)
         return;
