@@ -3,3 +3,5 @@
 build
 *.exe
 Program/
+*.out
+*.o
