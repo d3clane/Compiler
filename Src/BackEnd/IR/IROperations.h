@@ -90,7 +90,7 @@ DEF_IR_OP(F_POW,
 
 DEF_IR_OP(F_SQRT,
 {
-    PRINT_OPERATION(SQRTPD, node->operand1, node->operand1);
+    PRINT_OPERATION_TWO_OPERANDS(SQRTPD, node->operand1, node->operand1);
 })
 
 DEF_IR_OP(F_SIN,
@@ -117,13 +117,14 @@ DEF_IR_OP(F_PUSH,
 {
     PRINT_STR("SUB RSP, 0x10\n");
     PRINT_STR("MOVSD [RSP], ");
-    PRINT_LAST_OPERAND(node->operand1);
+    PRINT_OPERAND(node->operand1);
+    PRINT_STR("\n");
 })
 
 DEF_IR_OP(F_POP,
 {
-    PRINT_STR("MOVSD");
-    PRINT_OPERAND(node->operand1); PRINT_OPERATION_STR("[RSP]\n");
+    PRINT_STR("MOVSD ");
+    PRINT_OPERAND(node->operand1); PRINT_OPERATION_STR(", [RSP]\n");
     PRINT_STR("ADD RSP, 0x10\n");
 })
 
@@ -186,7 +187,8 @@ DEF_IR_OP(F_OUT,
 {
     PRINT_STR("SUB RSP, 0x10\n");
     PRINT_STR("MOVSD [RSP], ");
-    PRINT_LAST_OPERAND(node->operand1);
+    PRINT_OPERAND(node->operand1);
+    PRINT_STR("\n");
     PRINT_OPERATION("CALL StdFOut\n");
 })
 
