@@ -46,7 +46,7 @@ PRINT_VALUE:
         jns PRINT_AFTER_POINT
         neg rdi
 PRINT_AFTER_POINT:        
-        call PrintDecimalInt
+        call PrintThreeCharsInt
 
         mov rsp, rbp
         pop rbp
@@ -60,7 +60,7 @@ PrintDecimalInt:
             
 PrintDecimalIntArrSize equ 0x10
 
-            sub rsp,  PrintDecimalIntArrSize    ; saving 10 bytes for number
+            sub rsp,  PrintDecimalIntArrSize    ; saving 16 bytes for number
             mov rax, rdi                        ; saving value in rax for dividing
             mov rdi,  -1                        ; counter for array
             mov r8,  10d                        ; saving for dividing
@@ -111,6 +111,66 @@ PrintDecimalIntWrite:
             mov rsp, rbp
             pop rbp
             ret
+
+
+PrintThreeCharsInt:
+push rbp
+            mov  rbp, rsp
+            
+PrintThreeCharsIntArrSize equ 0x10
+
+            sub rsp,  PrintThreeCharsIntArrSize    ; saving 16 bytes for number
+            mov rax, rdi                        ; saving value in rax for dividing
+            mov rdi,  -1                        ; counter for array
+            mov r8,  10d                        ; saving for dividing
+
+            xor r9, r9
+            test eax, eax
+            jns PrintThreeCharsIntLoop
+            neg eax
+            mov r9, NumberIsNegative     ; setting that it was negative
+PrintThreeCharsIntLoop:
+            xor rdx, rdx
+            div r8
+            
+            add rdx, '0'    ; creating ASCII
+
+            mov [rbp + rdi], dl    ; pushing ASCII
+            dec rdi
+
+            cmp rdi, -4    ; stop pushing bits in case val is 0
+            je PrintThreeCharsIntLoopEnd
+            jmp PrintThreeCharsIntLoop
+
+PrintThreeCharsIntLoopEnd:
+            cmp r9, NumberIsNegative
+            jne PrintThreeCharsIntWrite
+            mov byte [rbp + rdi], '-'
+            dec rdi
+
+PrintThreeCharsIntWrite:
+            sub rsp, 0x8    ; aligning
+            push rdi        ; saving len
+
+            ;preparing for syscall write 
+            mov rdx, rdi
+            not rdx
+            ; rdx = -rax = ~rax + 1. No inc because actual size is rdx - 1
+
+            lea rsi, [rbp + rdi + 1]  ; string
+
+            mov rax, 0x1        ; preparing for syscall write
+            mov rdi, 1          ; stdout file descriptor
+
+            syscall
+
+            pop rax
+            not rax 
+
+            mov rsp, rbp
+            pop rbp
+            ret
+
 
 section .rodata
 
