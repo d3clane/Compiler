@@ -58,6 +58,10 @@ BACK_END_DIR = BackEnd
 BACK_END_CPP = main.cpp
 BACK_END_OBJ = $(BACK_END_CPP:%.cpp=$(OBJECTDIR)/%.o)
 
+BACK_END_TRANSLATE_X86_DIR 	= BackEnd/TranslateFromIR/x86
+BACK_END_TRANSLATE_X86_CPP	= x86Translate.cpp
+BACK_END_TRANSLATE_X86_OBJ	= $(BACK_END_TRANSLATE_X86_CPP:%.cpp=$(OBJECTDIR)/%.o)
+
 .PHONY: all docs clean buildDirs
 
 all: $(PROGRAMDIR)/$(TARGET)
@@ -67,6 +71,7 @@ all: $(PROGRAMDIR)/$(TARGET)
 $(PROGRAMDIR)/$(TARGET): $(TREE_OBJ) $(TREE_NAME_TABLE_OBJ) $(COMMON_OBJ) 			\
 						 $(BACK_END_OBJ) $(BACK_END_IR_OBJ) $(IR_LABEL_TABLE_OBJ) 	\
 						 $(BACK_END_IR_BUILD_OBJ) $(BACK_END_IR_LIST_OBJ)		 	\
+						 $(BACK_END_TRANSLATE_X86_OBJ)								\
 						 $(FAST_INPUT_OBJ)
 	$(CXX) $^ -o $(PROGRAMDIR)/$(TARGET) $(CXXFLAGS)
 
@@ -83,6 +88,9 @@ $(OBJECTDIR)/$(FAST_INPUT_DIR)_%.o : $(FAST_INPUT_DIR)/%.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) 
 
 $(OBJECTDIR)/%.o : $(BACK_END_DIR)/%.cpp
+	$(CXX) -c $< -o $@ $(CXXFLAGS) 
+
+$(OBJECTDIR)/%.o : $(BACK_END_TRANSLATE_X86_DIR)/%.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) 
 
 $(OBJECTDIR)/%.o : $(BACK_END_IR_DIR)/%.cpp
