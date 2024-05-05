@@ -5,7 +5,9 @@ global StdStrOut
 StdStrOut:
         push rbp
         mov rbp, rsp
-
+        
+        // TODO: think about receiving on stack vs on rdi
+        
         sub rsp, 0x8    ; aligning
 
         mov rsi, rdi    ; saving my string ptr
@@ -25,7 +27,7 @@ StdStrOut:
 
         mov rsp, rbp
         pop rbp
-        ret
+        ret 1
 
 StrLen:     cld 
 

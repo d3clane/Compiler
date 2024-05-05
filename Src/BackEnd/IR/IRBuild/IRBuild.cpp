@@ -226,16 +226,17 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
     case TreeOperationId::OPERATION_ID:                                                         \
     {                                                                                           \
         assert(CHILDREN_CNT > 0);                                                               \
-        Build(node->left, info);                                                              \
+        Build(node->left, info);                                                                \
         if (CHILDREN_CNT == 2)                                                                  \
         {                                                                                       \
-            Build(node->right, info);                                                         \
+            Build(node->right, info);                                                           \
             IR_PUSH(IRNodeCreate(OP(F_POP), operand2));                                         \
         }                                                                                       \
-        else operand2 = IROperandCtor();                                                            \
+        else operand2 = IROperandCtor();                                                        \
                                                                                                 \
         IR_PUSH(IRNodeCreate(OP(F_POP), operand1));                                             \
         IR_PUSH(IRNodeCreate(OP(ARITHM_OP), operand1, operand2));                               \
+        IR_PUSH(IRNodeCreate(OP(F_PUSH), operand1));                                            \
         break;                                                                                  \
     }
 
@@ -627,16 +628,17 @@ static void BuildVar(const TreeNode* node, CompilerInfoState* info)
     IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
 }
 
-static void     BuildRead           (const TreeNode* node, CompilerInfoState* info)
+static void BuildRead(const TreeNode* node, CompilerInfoState* info)
 {
     assert(node);
     assert(info);
     assert(info->ir);
 
     IR_PUSH(IRNodeCreate(OP(F_IN)));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
 }
 
-static void     BuildPrint          (const TreeNode* node, CompilerInfoState* info)
+static void BuildPrint(const TreeNode* node, CompilerInfoState* info)
 {
     assert(node);
     assert(info);
