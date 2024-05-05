@@ -3,8 +3,10 @@
 
 extern "C" double StdIn();
 extern "C" void   StdFOut(double value);
+extern "C" void   StdStrOut(const char* str);
 
 int main()
 {
-    StdFOut(StdIn());
+    //StdFOut(StdIn());
+    StdStrOut("BEBRA SQUAD\n");
 }
