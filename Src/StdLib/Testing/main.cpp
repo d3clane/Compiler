@@ -2,8 +2,9 @@
 #include <unistd.h>
 
 extern "C" double StdIn();
+extern "C" void   StdFOut(double value);
 
 int main()
 {
-    printf("%lf\n", StdIn());
+    StdFOut(StdIn());
 }
