@@ -8,6 +8,8 @@ StdFOut:
         push rbp
         mov rbp, rsp
 
+        movsd xmm0, [rbp - 0x10]    ; value on stack
+
         pxor xmm1, xmm1
         comisd xmm0, xmm1
         ja PRINT_VALUE
