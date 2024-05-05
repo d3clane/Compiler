@@ -106,17 +106,17 @@ DEF_IR_OP(F_COT,
 
 DEF_IR_OP(F_PUSH,
 {
-    PRINT_STR("SUB RSP, 0x10\n");
-    PRINT_STR("MOVSD [RSP], ");
+    PRINT_STR_WITH_SHIFT("SUB RSP, 0x10\n");
+    PRINT_STR_WITH_SHIFT("MOVSD [RSP], ");
     PRINT_OPERAND(node->operand1);
     PRINT_STR("\n");
 })
 
 DEF_IR_OP(F_POP,
 {
-    PRINT_STR("MOVSD ");
+    PRINT_STR_WITH_SHIFT("MOVSD ");
     PRINT_OPERAND(node->operand1); PRINT_STR(", [RSP]\n");
-    PRINT_STR("ADD RSP, 0x10\n");
+    PRINT_STR_WITH_SHIFT("ADD RSP, 0x10\n");
 })
 
 DEF_IR_OP(F_MOV,
@@ -176,16 +176,16 @@ DEF_IR_OP(RET,
 
 DEF_IR_OP(F_OUT,
 {
-    PRINT_STR("SUB RSP, 0x10\n");
-    PRINT_STR("MOVSD [RSP], ");
+    PRINT_STR_WITH_SHIFT("SUB RSP, 0x10\n");
+    PRINT_STR_WITH_SHIFT("MOVSD [RSP], ");
     PRINT_OPERAND(node->operand1);
     PRINT_STR("\n");
-    PRINT_OPERATION("CALL StdFOut\n");
+    PRINT_STR_WITH_SHIFT("CALL StdFOut\n");
 })
 
 DEF_IR_OP(F_IN,
 {
-    PRINT_STR("CALL StdIn\n");
+    PRINT_STR_WITH_SHIFT("CALL StdIn\n");
 })
 
 DEF_IR_OP(STR_OUT,
@@ -195,5 +195,5 @@ DEF_IR_OP(STR_OUT,
 
 DEF_IR_OP(HLT,
 {
-    PRINT_STR("CALL StdHLT\n");
+    PRINT_STR_WITH_SHIFT("CALL StdHLT\n");
 })

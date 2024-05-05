@@ -3,7 +3,7 @@
 
 #include "x86Translate.h"
 
-#define PRINT_LABEL(LABEL) PrintLabel(outStream, #LABEL)
+#define PRINT_LABEL(LABEL) PrintLabel(outStream, LABEL)
 static inline void PrintLabel(FILE* outStream, const char* label);
 
 #define EMPTY_OPERAND IROperandCtor()
@@ -22,7 +22,8 @@ static inline void PrintOperation(FILE* outStream, const char* operationName,
 #define PRINT_OPERAND(OPERAND) PrintOperand(outStream, OPERAND)
 static inline void PrintOperand(FILE* outStream, const IROperand operand);
 
-#define PRINT_STR(STRING) fprintf(outStream, "%s", STRING)
+#define PRINT_STR_WITH_SHIFT(STRING) fprintf(outStream, "\t%s", STRING)
+#define PRINT_STR(STRING)            fprintf(outStream, "%s", STRING)
 
 void TranslateToX86(const IR* ir, FILE* outStream)
 {
@@ -66,7 +67,7 @@ static inline void PrintOperation(FILE* outStream, const char* operationName,
                                   size_t numberOfOperands, 
                                   const IROperand operand1, const IROperand operand2)
 {
-    fprintf(outStream, "\t%s", operationName);
+    fprintf(outStream, "\t%s ", operationName);
     if (numberOfOperands > 0)
         PrintOperand(outStream, operand1);
     
