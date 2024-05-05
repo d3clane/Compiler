@@ -8,7 +8,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "BackEnd/IR/IR.h"
+#include "BackEnd/IR/IRList/IR.h"
 
 struct LabelTableValue
 {

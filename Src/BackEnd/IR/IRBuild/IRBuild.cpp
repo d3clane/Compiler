@@ -30,8 +30,6 @@ struct CompilerInfoState
 static inline CompilerInfoState CompilerInfoStateCtor();
 static inline void              CompilerInfoStateDtor(CompilerInfoState* info);
 
-static inline IR* IRCtor();
-
 static void     Build               (const TreeNode* node, CompilerInfoState* info);
 static void     BuildArithmeticOp   (const TreeNode* node, CompilerInfoState* info);
 static void     BuildComparison     (const TreeNode* node, CompilerInfoState* info);
@@ -234,7 +232,7 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
             Build(node->right, info);                                                         \
             IR_PUSH(IRNodeCreate(OP(F_POP), operand2));                                         \
         }                                                                                       \
-        else operand2 = EMPTY_OPERAND;                                                          \
+        else operand2 = IROperandCtor();                                                            \
                                                                                                 \
         IR_PUSH(IRNodeCreate(OP(F_POP), operand1));                                             \
         IR_PUSH(IRNodeCreate(OP(ARITHM_OP), operand1, operand2));                               \

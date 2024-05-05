@@ -153,7 +153,7 @@ IRNode* IRNodeCtor()
     return node;
 }
 
-static inline IR* IRCtor()
+IR* IRCtor()
 {
     IR* ir = (IR*)calloc(1, sizeof(*ir));
 
@@ -249,7 +249,7 @@ const char* IRGetOperationName(IROperation operation)
 
     switch (operation)
     {
-        #include "IROperations.h"
+        #include "BackEnd/IR/IROperations.h"
 
         default:    // Unreachable
             assert(false);

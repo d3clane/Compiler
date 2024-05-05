@@ -1,4 +1,8 @@
-#include "IR/IR.h"
+#include <assert.h>
+
+#include "Tree/Tree.h"
+#include "Tree/NameTable/NameTable.h"
+#include "IR/IRBuild/IRBuild.h"
 #include "Common/Log.h"
 
 int main(int argc, char* argv[])
@@ -20,7 +24,6 @@ int main(int argc, char* argv[])
     //TreeGraphicDump(&tree, true, allNamesTable);
 
     IR* ir = IRBuild(&tree, allNamesTable);
-    IR_TEXT_DUMP(ir, allNamesTable);
-
+    IR_TEXT_DUMP(ir);
     
 }

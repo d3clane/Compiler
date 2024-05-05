@@ -1,7 +1,7 @@
 #ifndef IR_LIST_H
 #define IR_LIST_H
 
-#include "IRRegisters.h"
+#include "BackEnd/IR/IRRegisters.h"
 
 #define DEF_IR_OP(IR_OP, ...) IR_OP,
 enum class IROperation
@@ -70,6 +70,8 @@ enum class IRErrors
 
 //-----------------------------------------------
 
+IR* IRCtor();
+
 void    IRPushBack(IR* irList, IRNode* node);
 IRNode* IRHead    (const IR* irList);
 
@@ -86,7 +88,6 @@ IRNode* IRNodeCreate(IROperation operation);
 IRNode* IRNodeCreate(const char* labelName);
 
 //-----------------------------------------------
-
 
 IROperandValue IROperandValueCreate(long long imm = 0,  IRRegister reg = IRRegister::NO_REG, 
                                     const char* string = nullptr, IRErrors* error = nullptr);
