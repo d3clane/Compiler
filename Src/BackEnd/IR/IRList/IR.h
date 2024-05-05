@@ -1,15 +1,12 @@
-#ifndef IR_H
-#define IR_H
+#ifndef IR_LIST_H
+#define IR_LIST_H
 
-#include <stddef.h>
-
-#include "Tree/Tree.h"
 #include "IRRegisters.h"
 
 #define DEF_IR_OP(IR_OP, ...) IR_OP,
 enum class IROperation
 {
-    #include "IROperations.h"
+    #include "BackEnd/IR/IROperations.h"
 };
 #undef DEF_IR_OP
 
@@ -73,8 +70,8 @@ enum class IRErrors
 
 //-----------------------------------------------
 
-// TODO: мб вынести в функции списка для IR (строить IR на списке и в нем эти структуры)
-void IRPushBack(IR* ir, IRNode* node);
+void    IRPushBack(IR* irList, IRNode* node);
+IRNode* IRHead    (const IR* irList);
 
 //-----------------------------------------------
 
@@ -107,20 +104,13 @@ IROperand IROperandMemCreate(const long long imm, IRRegister reg);
 
 //-----------------------------------------------
 
-IR* IRBuild(const Tree* tree, const NameTableType* allNamesTable);
-
-//-----------------------------------------------
-
-#define IR_TEXT_DUMP(IR, NAME_TABLE) IRTextDump(IR, NAME_TABLE, __FILE__, __func__, __LINE__)
-void IRTextDump(const IR* ir, const NameTableType* allNamesTable, 
-                const char* fileName, const char* funcName, const int line);
+#define IR_TEXT_DUMP(IR) IRTextDump(IR, __FILE__, __func__, __LINE__)
+void IRTextDump(const IR* ir, const char* fileName, const char* funcName, const int line);
 
 void IROperandTextDump(const IROperand operand);
 
 //-----------------------------------------------
 
 const char* IRGetOperationName(IROperation operation);
-
-//-----------------------------------------------
 
 #endif

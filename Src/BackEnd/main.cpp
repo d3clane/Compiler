@@ -21,4 +21,6 @@ int main(int argc, char* argv[])
 
     IR* ir = IRBuild(&tree, allNamesTable);
     IR_TEXT_DUMP(ir, allNamesTable);
+
+    
 }

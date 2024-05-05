@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "IR.h"
+#include "IRBuild.h"
 #include "Tree/NameTable/NameTable.h"
+#include "Tree/Tree.h"
 #include "LabelTable/LabelTable.h"
 #include "Common/Log.h"
 
@@ -51,12 +52,9 @@ static int      InitFuncLocalVars   (const TreeNode* node, CompilerInfoState* in
 
 static void PatchJumps(IR* ir, const LabelTableType* labelTable);
 
-#define TYPE(IR_TYPE)      IROperandType::IR_TYPE
 #define IR_REG(REG_NAME)   IRRegister::REG_NAME  
 #define OP(OP_NAME)        IROperation::OP_NAME
-#define EMPTY_OPERAND      IROperandCtor()
 #define IR_PUSH(NODE)      IRPushBack(info->ir, NODE)
-#define CREATE_VALUE(...)  IROperandValueCreate(__VA_ARGS__)
 
 #define LABEL_PUSH(NAME)                                        \
 do                                                              \
@@ -419,9 +417,7 @@ static void PushFuncCallArgs(const TreeNode* node, CompilerInfoState* info)
                                  IROperandRegCreate(IR_REG(XMM0)),
                                  IROperandMemCreate(name->memShift, name->reg)));
 
-            IR_PUSH(IRNodeCreate(OP(F_PUSH), 
-                                 IROperandRegCreate(IR_REG(XMM0)),
-                                 EMPTY_OPERAND));
+            IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
 
             break;
         }
@@ -676,7 +672,7 @@ static void PatchJumps(IR* ir, const LabelTableType* labelTable)
     {
         if (node->needPatch && !node->jumpTarget)
         {
-            assert(node->operand1.type == TYPE(STR));
+            assert(node->operand1.type == IROperandType::STR);
 
             LabelTableValue* outLabel = nullptr;
             LabelTableFind(labelTable, node->operand1.value.string, &outLabel);
@@ -694,174 +690,14 @@ static void PatchJumps(IR* ir, const LabelTableType* labelTable)
 
 //-----------------------------------------------------------------------------
 
-void IROperandValueDtor(IROperandValue* value)
-{
-    if (!value)
-        return;
-
-    value->imm = 0;
-    value->reg = IRRegister::NO_REG;
-
-    if (!value->string)
-        return;
-
-    free(value->string);
-    value->string = nullptr;
-}
-
-IROperandValue IROperandValueCreate(long long imm, IRRegister reg, const char* string,
-                                    IRErrors* error)
-{
-    IROperandValue val = {};
-    val.imm  = imm;
-    val.reg  = reg;
-    
-    if (string)
-    {
-        val.string = strdup(string);
-
-        if (error && !val.string) *error = IRErrors::MEM_ALLOC_ERR;
-        else if (!error) assert(val.string);
-    }
-
-    return val;
-}
-
-IROperand IROperandCtor()
-{
-    IROperand operand = 
-    {
-        .value = IROperandValueCreate(),
-        .type  = IROperandType::IMM,
-    };
-
-    return operand;
-}
-
-IROperand IROperandCreate(IROperandValue val, IROperandType type)
-{
-    IROperand operand = 
-    {
-        .value = val,
-        .type  = type,
-    };
-
-    return operand;
-}
-
-IRNode* IRNodeCtor()
-{
-    IRNode* node = (IRNode*)calloc(1, sizeof(*node));
-
-    node->operation = IROperation::NOP;
-
-    node->asmAddress = 0;
-    node->jumpTarget = nullptr;
-    node->needPatch  = false;
-
-    node->numberOfOperands = 0;
-    node->operand1         = IROperandCtor();
-    node->operand2         = IROperandCtor();
-
-    node->nextNode   = nullptr;
-    node->prevNode   = nullptr;
-
-    return node;
-}
-
-static inline IR* IRCtor()
-{
-    IR* ir = (IR*)calloc(1, sizeof(*ir));
-
-    ir->end = IRNodeCtor();
-    ir->size  = 0;
-
-    ir->end->nextNode = ir->end;
-    ir->end->prevNode = ir->end;
-
-    return ir;
-}
-
-void IRPushBack  (IR* ir, IRNode* node)
-{
-    assert(ir);
-    assert(node);
-
-    node->nextNode    = ir->end->nextNode;
-    node->prevNode    = ir->end;
-    ir->end->nextNode = node;
-    
-    ir->end = node;
-
-    ir->size++;
-}
-
-IRNode* IRNodeCreate(IROperation operation, const char* labelName, 
-                     size_t numberOfOperands, IROperand operand1, IROperand operand2,
-                     bool needPatch)
-{
-    IRNode* node = IRNodeCtor();
-
-    node->operation = operation;
-    
-    node->labelName = labelName ? strdup(labelName) : nullptr;
-
-    node->numberOfOperands = numberOfOperands;
-    
-    node->operand1 = operand1;
-    node->operand2 = operand2;
-
-    node->needPatch = needPatch;
-
-    return node;
-}
-
-IRNode* IRNodeCreate(IROperation operation, IROperand operand1, bool needPatch)
-{
-    return IRNodeCreate(operation, nullptr, 1, operand1, EMPTY_OPERAND, needPatch);
-}
-
-IRNode* IRNodeCreate(IROperation operation, IROperand operand1, IROperand operand2, bool needPatch)
-{
-    return IRNodeCreate(operation, nullptr, 2, operand1, operand2, needPatch);
-}
-
-IRNode* IRNodeCreate(IROperation operation)
-{
-    return IRNodeCreate(operation, nullptr, 0, EMPTY_OPERAND, EMPTY_OPERAND, false);
-}
-
-IRNode* IRNodeCreate(const char* labelName)
-{
-    return IRNodeCreate(OP(NOP), labelName, 0, EMPTY_OPERAND, EMPTY_OPERAND, false);
-}
-
-IROperand IROperandRegCreate(IRRegister reg)
-{
-    return IROperandCreate(CREATE_VALUE(0, reg), TYPE(REG));
-}
-
-IROperand IROperandImmCreate(const long long imm)
-{
-    return IROperandCreate(CREATE_VALUE(imm), TYPE(IMM));
-}
-
-IROperand IROperandStrCreate(const char* str)
-{
-    return IROperandCreate(CREATE_VALUE(0, IR_REG(NO_REG), str), TYPE(STR));
-}
-
-IROperand IROperandMemCreate(const long long imm, IRRegister reg)
-{
-    return IROperandCreate(CREATE_VALUE(imm, reg), TYPE(MEM));
-}
-
 static inline CompilerInfoState CompilerInfoStateCtor()
 {
     CompilerInfoState info  = {};
     info.allNamesTable      = nullptr;
     info.localTable         = nullptr;
     info.ir                 = nullptr;
+
+    LabelTableDtor(info.labelTable);
     info.labelTable         = nullptr;
 
     info.labelId            = 0;
@@ -909,89 +745,6 @@ static inline void CreateImgInLogFile(const size_t imgIndex, bool openImg)
 
 //---------------------------------------------------------------------------------------
 
-void IRTextDump(const IR* ir, const NameTableType* allNamesTable, 
-                const char* fileName, const char* funcName, const int line)
-{
-    assert(ir);
-    assert(fileName);
-    assert(funcName);
-    assert(allNamesTable);
-
-    LogBegin(fileName, funcName, line);
-
-    assert(ir->end);
-    IRNode* beginNode = ir->end->nextNode;
-    IRNode* node = beginNode;
-
-    do
-    {
-        Log("---------------\n");
-        Log("Operation - %s\n", IRGetOperationName(node->operation));    
-
-        if (node->labelName) Log("Label name - %s\n", node->labelName);
-        
-        if (node->numberOfOperands > 0) IROperandTextDump(node->operand1);
-        if (node->numberOfOperands > 1) IROperandTextDump(node->operand2);
-
-        node = node->nextNode;
-    } while (node != beginNode);
-    
-    LogEnd(fileName, funcName, line);
-}
-
-void IROperandTextDump(const IROperand operand)
-{
-    switch (operand.type)
-    {
-        case TYPE(IMM):
-            Log("IMM: \n");
-            break;
-        case TYPE(REG):
-            Log("REG: \n");
-            break;
-        case TYPE(MEM):
-            Log("MEM: \n");
-            break;
-        case TYPE(STR):
-            Log("STR \n");
-            break;
-
-        default: // Unreachable
-            assert(false);
-            break;
-    }
-
-    Log("\t imm - %d\n"
-        "\t reg - %s\n",
-        operand.value.imm, IRRegisterGetName(operand.value.reg));
-
-    if (operand.value.string) Log("\t str - %s\n", operand.value.string);
-    else                      Log("\t str - null\n");
-}
-
-const char* IRGetOperationName(IROperation operation)
-{
-    #define DEF_IR_OP(OP_NAME, ...)     \
-        case IROperation::OP_NAME:      \
-            return #OP_NAME;            
-
-    switch (operation)
-    {
-        #include "IROperations.h"
-
-        default:    // Unreachable
-            assert(false);
-            return nullptr;
-    }
-
-    // Unreachable
-    assert(false);
-    return nullptr;
-}
-
-#undef TYPE
 #undef IR_REG
 #undef OP
-#undef EMPTY_OPERAND
 #undef IR_PUSH
-#undef CREATE_VALUE
