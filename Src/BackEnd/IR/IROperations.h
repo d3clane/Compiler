@@ -6,22 +6,13 @@
 
 // PRINT_LABEL(LABEL) - prints label to outStream x86 asm
 // Vars : const IR* ir, FILE* outStream, IRNode* node
-#ifndef PRINT_LABEL
-#define PRINT_LABEL(...)
-#endif
-
-#ifndef PRINT_OPERATION
-#define PRINT_OPERATION(...)
-#endif
-
-#ifndef PRINT_OPERANDS
-#define PRINT_OPERANDS(...)
-#endif
 
 DEF_IR_OP(NOP,
 {
-    if (node->labelName) 
+    if (node->labelName)
+    {
         PRINT_LABEL(node->labelName);
+    }
     else
     {
         PRINT_OPERATION(NOP);
@@ -124,7 +115,7 @@ DEF_IR_OP(F_PUSH,
 DEF_IR_OP(F_POP,
 {
     PRINT_STR("MOVSD ");
-    PRINT_OPERAND(node->operand1); PRINT_OPERATION_STR(", [RSP]\n");
+    PRINT_OPERAND(node->operand1); PRINT_STR(", [RSP]\n");
     PRINT_STR("ADD RSP, 0x10\n");
 })
 

@@ -3,7 +3,7 @@
 
 #include "x86Translate.h"
 
-#define PRINT_LABEL(LABEL) FprintfLabel(outStream, #LABEL);
+#define PRINT_LABEL(LABEL) PrintLabel(outStream, #LABEL)
 static inline void PrintLabel(FILE* outStream, const char* label);
 
 #define EMPTY_OPERAND IROperandCtor()
@@ -102,7 +102,7 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand)
     switch (operand.type)
     {
         case IROperandType::IMM:
-            fprintf(outStream, "%d", operand.value.imm);
+            fprintf(outStream, "%lld", operand.value.imm);
             break;
         
         case IROperandType::REG:
@@ -112,7 +112,7 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand)
         case IROperandType::MEM:
             assert(operand.value.reg != IRRegister::NO_REG);
 
-            fprintf(outStream, "[%s + %d]", 
+            fprintf(outStream, "[%s + %lld]", 
                     IRRegisterGetName(operand.value.reg), operand.value.imm);
 
             break;
