@@ -696,8 +696,6 @@ static inline CompilerInfoState CompilerInfoStateCtor()
     info.allNamesTable      = nullptr;
     info.localTable         = nullptr;
     info.ir                 = nullptr;
-
-    LabelTableDtor(info.labelTable);
     info.labelTable         = nullptr;
 
     info.labelId            = 0;
@@ -713,6 +711,8 @@ static inline void              CompilerInfoStateDtor(CompilerInfoState* info)
     info->allNamesTable      = nullptr;
     info->localTable         = nullptr;
     info->ir                 = nullptr;
+
+    LabelTableDtor(info->labelTable);
     info->labelTable         = nullptr;
 
     info->labelId            = 0;

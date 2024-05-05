@@ -3,6 +3,7 @@
 #include "Tree/Tree.h"
 #include "Tree/NameTable/NameTable.h"
 #include "IR/IRBuild/IRBuild.h"
+#include "TranslateFromIR/x86/x86Translate.h"
 #include "Common/Log.h"
 
 int main(int argc, char* argv[])
@@ -25,5 +26,5 @@ int main(int argc, char* argv[])
 
     IR* ir = IRBuild(&tree, allNamesTable);
     IR_TEXT_DUMP(ir);
-    
+    TranslateToX86(ir, outStream);
 }
