@@ -242,7 +242,7 @@ static inline void       RodataInfoDtor(RodataInfo* info)
     info->rodataStrings    = nullptr;
 }
 
-static inline void PrintRodata(FILE* outStream, RodataInfo* info)
+static inline void PrintRodata(FILE* outStream, const RodataInfo* info)
 {
     assert(outStream);
     assert(info);
