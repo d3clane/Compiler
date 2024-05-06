@@ -1,5 +1,5 @@
-#ifndef ARRAY_FUNCS_H
-#define ARRAY_FUNCS_H
+#ifndef RODATA_STRINGS_ARRAY_FUNCS_H
+#define RODATA_STRINGS_ARRAY_FUNCS_H
 
 #include "RodataStringsTypes.h"
 

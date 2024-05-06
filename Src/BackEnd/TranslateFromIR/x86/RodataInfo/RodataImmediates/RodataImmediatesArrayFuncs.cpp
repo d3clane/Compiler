@@ -5,11 +5,6 @@
 
 #include "RodataImmediatesArrayFuncs.h"
 
-static const size_t RodataImmediatesMin(size_t element1, size_t elemen2)
-{
-
-}
-
 void FillRodataImmediates(RodataImmediatesValue* firstBorder, RodataImmediatesValue* secondBorder, const RodataImmediatesValue value)
 {
     assert(firstBorder);

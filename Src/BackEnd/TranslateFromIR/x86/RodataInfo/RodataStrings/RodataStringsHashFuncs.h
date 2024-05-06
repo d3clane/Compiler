@@ -1,5 +1,5 @@
-#ifndef HASH_FUNCS_H
-#define HASH_FUNCS_H
+#ifndef RODATA_STRINGS_HASH_FUNCS_H
+#define RODATA_STRINGS_HASH_FUNCS_H
 
 #include <stddef.h>
 #include <stdint.h>

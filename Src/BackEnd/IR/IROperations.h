@@ -127,6 +127,9 @@ DEF_IR_OP(F_POP,
 DEF_IR_OP(F_MOV,
 {
     PRINT_OPERATION(MOVSD);
+
+    if (node->operand2.type == IROperandType::IMM)
+        RODATA_INFO_UPDATE_IMM(node->operand2.value.imm);
 })
 
 DEF_IR_OP(F_CMP,
