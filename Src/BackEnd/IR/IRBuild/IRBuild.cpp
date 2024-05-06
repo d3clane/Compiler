@@ -236,7 +236,6 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
                                                                                                 \
         IR_PUSH(IRNodeCreate(OP(F_POP), operand1));                                             \
         IR_PUSH(IRNodeCreate(OP(ARITHM_OP), operand1, operand2));                               \
-        IR_PUSH(IRNodeCreate(OP(F_PUSH), operand1));                                            \
         break;                                                                                  \
     }
 
@@ -252,8 +251,6 @@ static void BuildArithmeticOp(const TreeNode* node, CompilerInfoState* info)
 #undef GENERATE_OPERATION_CMD
 
     IR_PUSH(IRNodeCreate(OP(F_PUSH), operand1));
-
-    return;
 }
 
 static void BuildFunc(const TreeNode* node, CompilerInfoState* info)
@@ -306,6 +303,8 @@ static size_t InitFuncParams(const TreeNode* node, CompilerInfoState* info)
     if (node->valueType == TreeNodeValueType::NAME)
     {
         Name pushName = {};
+
+        printf("NAME - %s, shift - %lld\n", NameTableGetName(info->allNamesTable, node->value.nameId), info->memShift);
         NameCtor(&pushName, NameTableGetName(info->allNamesTable, node->value.nameId), nullptr, 
                  info->memShift, info->regShift);
         // TODO: Name ctors strdups name. 
@@ -329,7 +328,7 @@ static size_t InitFuncParams(const TreeNode* node, CompilerInfoState* info)
             size_t cntRight = InitFuncParams(node->right, info);
 
             info->memShift += (int)XMM_REG_BYTE_SIZE;
-
+        
             return cntRight + InitFuncParams(node->left, info);
         }
 

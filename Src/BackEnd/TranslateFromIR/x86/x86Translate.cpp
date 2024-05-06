@@ -294,7 +294,7 @@ static inline void PrintRodataStrings   (FILE* outStream,
         char* stringLabel  = GetStringLabel(string);
 
         fprintf(outStream, "%s:\n"
-                           "\tdb \'%s\'\n\n", 
+                           "\tdb \'%s\', 0\n\n", 
                            stringLabel, string);
 
         free(stringLabel);
@@ -311,7 +311,7 @@ static inline char* GetStringLabel(const char* string)
     char* labelPtr = label;
 
     snprintf(label, labelLength, "%s%s", labelPrefix, string);
-    
+
     while (*labelPtr)
     {
         if (*labelPtr == ' ' || *labelPtr == ':')
