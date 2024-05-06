@@ -462,8 +462,11 @@ static void BuildIf(const TreeNode* node, CompilerInfoState* info)
 
     IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
     
+    IR_PUSH(IRNodeCreate(OP(F_XOR), IROperandRegCreate(IR_REG(XMM1)), 
+                                    IROperandRegCreate(IR_REG(XMM1))));
+
     IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)), 
-                                    IROperandImmCreate(0)));
+                                    IROperandRegCreate(IR_REG(XMM1))));
 
     IR_PUSH(IRNodeCreate(OP(JE), IROperandStrCreate(ifEndLabel), true));
 
@@ -495,8 +498,11 @@ static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
 
     IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
     
+    IR_PUSH(IRNodeCreate(OP(F_XOR), IROperandRegCreate(IR_REG(XMM1)),
+                                    IROperandRegCreate(IR_REG(XMM1))));
+
     IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)), 
-                                    IROperandImmCreate(0)));
+                                    IROperandRegCreate(IR_REG(XMM1))));
                                                
     IR_PUSH(IRNodeCreate(OP(JE), IROperandStrCreate(whileEndLabel), true));
 
@@ -591,12 +597,19 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
 #undef GENERATE_OPERATION_CMD
 
     IR_PUSH(IRNodeCreate(jumpOp, IROperandStrCreate(comparePushTrue), true));
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandImmCreate(0)));
+
+    IR_PUSH(IRNodeCreate(OP(F_XOR),  IROperandRegCreate(IR_REG(XMM0)),
+                                     IROperandRegCreate(IR_REG(XMM0))));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
+
     IR_PUSH(IRNodeCreate(OP(JMP), IROperandStrCreate(compareEnd), true));
 
     IR_PUSH_LABEL(comparePushTrue);
 
-    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandImmCreate(1)));
+    IR_PUSH(IRNodeCreate(OP(F_MOV), IROperandRegCreate(IR_REG(XMM0)), 
+                                    IROperandImmCreate(1)));
+
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
 
     IR_PUSH_LABEL(compareEnd);
 }
