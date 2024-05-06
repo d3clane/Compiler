@@ -3,6 +3,8 @@
 
 #include "x86Translate.h"
 
+//-----------------------------------------------------------------------------
+
 #define PRINT_LABEL(LABEL) PrintLabel(outStream, LABEL)
 static inline void PrintLabel(FILE* outStream, const char* label);
 
@@ -25,9 +27,18 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand);
 #define PRINT_STR_WITH_SHIFT(STRING) fprintf(outStream, "\t%s", STRING)
 #define PRINT_STR(STRING)            fprintf(outStream, "%s", STRING)
 
+//-----------------------------------------------------------------------------
+
+static inline void PrintEntry   (FILE* outStream);
+static inline void PrintRodata  (FILE* outStream);
+
+//-----------------------------------------------------------------------------
+
 void TranslateToX86(const IR* ir, FILE* outStream)
 {
     assert(ir);
+
+    PrintEntry(outStream);
 
     IRNode* beginNode = IRHead(ir);
     IRNode* node = beginNode;
@@ -53,7 +64,10 @@ void TranslateToX86(const IR* ir, FILE* outStream)
         node = node->nextNode;
     } while (node != beginNode);
     
+    PrintRodata(outStream);
 }
+
+//-----------------------------------------------------------------------------
 
 static inline void PrintLabel(FILE* outStream, const char* label)
 {
@@ -127,4 +141,23 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand)
             assert(false);
             break;
     }
+}
+
+//-----------------------------------------------------------------------------
+
+static inline void PrintEntry(FILE* outStream)
+{
+    assert(outStream);
+
+    static const char* stdLibName = "StdLib57.s";
+
+    fprintf(outStream, "section .text\n"
+                       "global main\n"
+                       "%%include %s\n\n",
+                       stdLibName);
+}
+
+static inline void PrintRodata(FILE* outStream)
+{
+
 }
