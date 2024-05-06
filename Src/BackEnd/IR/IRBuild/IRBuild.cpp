@@ -561,8 +561,8 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
     Build(node->left, info);
     Build(node->right, info);
 
-    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
     IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM1))));
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
 
     IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)),
                                     IROperandRegCreate(IR_REG(XMM1))));
