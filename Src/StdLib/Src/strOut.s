@@ -5,9 +5,9 @@ global StdStrOut
 StdStrOut:
         push rbp
         mov rbp, rsp
-        
-        // TODO: think about receiving on stack vs on rdi
-        
+                
+        mov rdi, [rbp + 0x10] ; value from stack
+
         sub rsp, 0x8    ; aligning
 
         mov rsi, rdi    ; saving my string ptr
