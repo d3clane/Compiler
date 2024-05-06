@@ -269,9 +269,9 @@ static inline void PrintRodataImmediates(FILE* outStream,
     for (size_t i = 0; i < rodataImmediates->size; ++i)
     {
         long long value = rodataImmediates->data[i].imm;
-        doubleBytes.value = value;
+        doubleBytes.value = (double)value;
 
-        fprintf(outStream, "XMM_VALUE_%lld:\n",
+        fprintf(outStream, "XMM_VALUE_%lld:\n"
                            "\tdd %d\n"
                            "\tdd %d\n\n",
                            value, doubleBytes.bytes[0], doubleBytes.bytes[1]);

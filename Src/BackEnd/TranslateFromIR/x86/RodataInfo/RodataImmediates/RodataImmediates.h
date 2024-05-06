@@ -142,7 +142,7 @@ static inline bool RodataImmediatesIsEmpty(const RodataImmediatesType* stk)
     return stk->size == 0;
 }
 
-static inline const long long RodataImmediatesGetImmediate(const RodataImmediatesType* table, size_t pos)
+static inline long long RodataImmediatesGetImmediate(const RodataImmediatesType* table, size_t pos)
 {
     return table->data[pos].imm;
 }
