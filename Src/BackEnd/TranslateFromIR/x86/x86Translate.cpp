@@ -1,7 +1,10 @@
 #include <assert.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "x86Translate.h"
+#include "RodataInfo/RodataImmediates/RodataImmediates.h"
+#include "RodataInfo/RodataStrings/RodataStrings.h"
 
 //-----------------------------------------------------------------------------
 
@@ -26,11 +29,37 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand);
 
 #define PRINT_STR_WITH_SHIFT(STRING) fprintf(outStream, "\t%s", STRING)
 #define PRINT_STR(STRING)            fprintf(outStream, "%s", STRING)
+#define PRINT_FORMAT_STR(...)        fprintf(outStream, __VA_ARGS__)
+
+//-----------------------------------------------------------------------------
+
+struct RodataInfo
+{
+    RodataImmediatesType* rodataImmediates;
+    RodataStringsType*    rodataStrings;
+};
+
+static inline RodataInfo RodataInfoCtor();
+
+#define RODATA_INFO_UPDATE_STRING(STRING) RodataInfoUpdate(string, &info);
+static inline void       RodataInfoUpdate(const char* string,  RodataInfo* info);
+
+#define RODATA_INFO_UPDATE_IMM(IMM) RodataInfoUpdate(IMM, &info);
+static inline void       RodataInfoUpdate(const long long imm, RodataInfo* info);
+static inline void       RodataInfoDtor(RodataInfo* info);
+
+
+static inline void PrintRodata          (FILE* outStream, const RodataInfo* info);
+static inline void PrintRodataImmediates(FILE* outStream, 
+                                         const RodataImmediatesType* rodataImmediates);
+static inline void PrintRodataStrings   (FILE* outStream, 
+                                         const RodataStringsType*    rodataStrings);
+
+static inline char* GetStringLabel(const char* string);
 
 //-----------------------------------------------------------------------------
 
 static inline void PrintEntry   (FILE* outStream);
-static inline void PrintRodata  (FILE* outStream);
 
 //-----------------------------------------------------------------------------
 
@@ -39,10 +68,12 @@ void TranslateToX86(const IR* ir, FILE* outStream)
     assert(ir);
 
     PrintEntry(outStream);
+    
+    RodataInfo info = RodataInfoCtor();
 
     IRNode* beginNode = IRHead(ir);
     IRNode* node = beginNode;
-    
+
 #define DEF_IR_OP(OP_NAME, X86_ASM_CODE, ...)           \
     case IROperation::OP_NAME:                          \
     {                                                   \
@@ -64,7 +95,9 @@ void TranslateToX86(const IR* ir, FILE* outStream)
         node = node->nextNode;
     } while (node != beginNode);
     
-    PrintRodata(outStream);
+    PrintRodata(outStream, &info);
+
+    RodataInfoDtor(&info);
 }
 
 //-----------------------------------------------------------------------------
@@ -157,7 +190,128 @@ static inline void PrintEntry(FILE* outStream)
                        stdLibName);
 }
 
-static inline void PrintRodata(FILE* outStream)
-{
+//-----------------------------------------------------------------------------
 
+static inline RodataInfo RodataInfoCtor()
+{
+    RodataInfo info = {};
+    RodataImmediatesCtor(&info.rodataImmediates);
+    RodataStringsCtor   (&info.rodataStrings);
+
+    return info;
+}
+
+static inline void       RodataInfoUpdate(const char* string, RodataInfo* info)
+{
+    assert(info);
+
+    RodataStringsValue* value = nullptr;
+    RodataStringsFind(info->rodataStrings, string, &value);
+
+    if (value != nullptr)
+        return;
+
+    RodataStringsValue pushVal = {};
+    RodataStringsValueCtor(&pushVal, string);
+    RodataStringsPush(info->rodataStrings, pushVal);
+}
+
+static inline void       RodataInfoUpdate(const long long imm, RodataInfo* info)
+{
+    assert(info);
+
+    RodataImmediatesValue* value = nullptr;
+    RodataImmediatesFind(info->rodataImmediates, imm, &value);
+
+    if (value != nullptr)
+        return;
+
+    RodataImmediatesValue pushVal = {};
+    RodataImmediatesValueCtor(&pushVal, imm);
+    RodataImmediatesPush(info->rodataImmediates, pushVal);
+}
+
+static inline void       RodataInfoDtor(RodataInfo* info)
+{
+    assert(info);
+
+    RodataImmediatesDtor(info->rodataImmediates);
+    RodataStringsDtor   (info->rodataStrings);
+
+    info->rodataImmediates = nullptr;
+    info->rodataStrings    = nullptr;
+}
+
+static inline void PrintRodata(FILE* outStream, RodataInfo* info)
+{
+    assert(outStream);
+    assert(info);
+
+    fprintf(outStream, "section .rodata\n\n");
+
+    PrintRodataImmediates(outStream, info->rodataImmediates);
+    PrintRodataStrings   (outStream, info->rodataStrings);
+}
+
+static inline void PrintRodataImmediates(FILE* outStream, 
+                                         const RodataImmediatesType* rodataImmediates)
+{
+    assert(outStream);
+    assert(rodataImmediates);
+
+    // TODO: Implementation defined - change on memcpy
+    union 
+    {
+        double value;
+        int    bytes[2];
+    } doubleBytes;
+
+    for (size_t i = 0; i < rodataImmediates->size; ++i)
+    {
+        long long value = rodataImmediates->data[i].imm;
+        doubleBytes.value = value;
+
+        fprintf(outStream, "XMM_VALUE_%lld:\n",
+                           "\tdd %d\n"
+                           "\tdd %d\n\n",
+                           value, doubleBytes.bytes[0], doubleBytes.bytes[1]);
+    }
+}
+
+static inline void PrintRodataStrings   (FILE* outStream, 
+                                         const RodataStringsType* rodataStrings)
+{
+    assert(outStream);
+    assert(rodataStrings);
+
+    for (size_t i = 0; i < rodataStrings->size; ++i)
+    {
+        const char* string = rodataStrings->data[i].string;
+        char* stringLabel  = GetStringLabel(string);
+
+
+        fprintf(outStream, "STR_%s:\n"
+                           "\tdb \'%s\'", 
+                           stringLabel, string);
+
+        free(stringLabel);
+    }
+}
+
+static inline char* GetStringLabel(const char* string)
+{
+    assert(string);
+
+    char* label    = strdup(string);
+    char* labelPtr = label;
+
+    while (*labelPtr)
+    {
+        if (*labelPtr == ' ')
+            *labelPtr = '_';
+
+        labelPtr++;   
+    }
+
+    return label;
 }

@@ -195,7 +195,14 @@ DEF_IR_OP(F_IN,
 
 DEF_IR_OP(STR_OUT,
 {
-    assert(false); // Здесь чет надо еще подумать как строки будут храниться
+    const char* string = node->operand1.value.string;
+    char* stringLabel  = GetStringLabel(string);
+
+    PRINT_FORMAT_STR("\tPUSH [rel %s]\n", stringLabel);
+    PRINT_STR_WITH_SHIFT("CALL StdStrOut\n");
+    RODATA_INFO_UPDATE_STRING(stringLabel);
+
+    free(stringLabel);
 })
 
 DEF_IR_OP(HLT,
