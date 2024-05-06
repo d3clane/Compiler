@@ -517,7 +517,7 @@ static TreeNode* TreeReadPrefixFormat(const char* const string, const char** str
 }
 
 static const char* TreeReadNodeValue(TreeNodeValue* value, TreeNodeValueType* valueType, 
-                                            const char* string, NameTableType* allNamesTable)
+                                     const char* string, NameTableType* allNamesTable)
 {
     assert(value);
     assert(string);
@@ -543,20 +543,18 @@ static const char* TreeReadNodeValue(TreeNodeValue* value, TreeNodeValueType* va
     if (*string == '"')
     {
         size_t inputStringPos = 0;
-        do
+        ++stringPtr;
+        while (*stringPtr != '"')
         {
+            assert(inputStringPos < maxInputStringSize);
+
             inputString[inputStringPos] = *stringPtr;
             inputStringPos++;
             stringPtr++;
-
-            assert(inputStringPos < maxInputStringSize);
-        } while (*stringPtr != '"');
-
-        inputString[inputStringPos] = *stringPtr;
+        }
         stringPtr++;
-        inputStringPos++;
-
         inputString[inputStringPos] = '\0';
+
         Name pushName = {};
         NameCtor(&pushName, inputString, nullptr, 0, IRRegister::NO_REG);
 

@@ -213,7 +213,8 @@ DEF_IR_OP(STR_OUT,
     const char* string = node->operand1.value.string;
     char* stringLabel  = GetStringLabel(string);
 
-    PRINT_FORMAT_STR("\tPUSH [rel %s]\n", stringLabel);
+    PRINT_FORMAT_STR    ("\tLEA RAX, [rel %s]\n", stringLabel);
+    PRINT_STR_WITH_SHIFT("PUSH RAX\n");
     PRINT_STR_WITH_SHIFT("CALL StdStrOut\n");
     RODATA_INFO_UPDATE_STRING(stringLabel);
 

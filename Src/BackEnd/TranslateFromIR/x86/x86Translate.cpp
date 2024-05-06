@@ -293,8 +293,8 @@ static inline void PrintRodataStrings   (FILE* outStream,
         const char* string = rodataStrings->data[i].string;
         char* stringLabel  = GetStringLabel(string);
 
-        fprintf(outStream, "STR_%s:\n"
-                           "\tdb \'%s\'", 
+        fprintf(outStream, "%s:\n"
+                           "\tdb \'%s\'\n\n", 
                            stringLabel, string);
 
         free(stringLabel);
@@ -305,12 +305,16 @@ static inline char* GetStringLabel(const char* string)
 {
     assert(string);
 
-    char* label    = strdup(string);
+    static const char* labelPrefix = "STR_LABEL_";
+    size_t labelLength = strlen(string) + strlen(labelPrefix) + 1;
+    char* label = (char*)calloc(labelLength, sizeof(*label));
     char* labelPtr = label;
 
+    snprintf(label, labelLength, "%s%s", labelPrefix, string);
+    
     while (*labelPtr)
     {
-        if (*labelPtr == ' ')
+        if (*labelPtr == ' ' || *labelPtr == ':')
             *labelPtr = '_';
 
         labelPtr++;   

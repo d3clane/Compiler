@@ -4,10 +4,10 @@
 
 
 #define GENERATE_OPERATION_CMD(NAME, ...)                                       \
-    TreeNode* CREATE_##NAME ##_NODE(TreeNode* left, TreeNode* right)     \
+    TreeNode* CREATE_##NAME ##_NODE(TreeNode* left, TreeNode* right)            \
     {                                                                           \
-        return TreeNodeCreate(TreeCreateOpVal(TreeOperationId::NAME),     \
-                              TreeNodeValueType::OPERATION,                   \
+        return TreeNodeCreate(TreeCreateOpVal(TreeOperationId::NAME),           \
+                              TreeNodeValueType::OPERATION,                     \
                               left, right);                                     \
     }
 
