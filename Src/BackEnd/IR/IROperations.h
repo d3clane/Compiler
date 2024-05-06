@@ -126,10 +126,22 @@ DEF_IR_OP(F_POP,
 
 DEF_IR_OP(F_MOV,
 {
-    PRINT_OPERATION(MOVSD);
-
     if (node->operand2.type == IROperandType::IMM)
-        RODATA_INFO_UPDATE_IMM(node->operand2.value.imm);
+    {
+        PRINT_STR_WITH_SHIFT("MOVSD ");
+        PRINT_OPERAND(node->operand1);
+
+        long long imm = node->operand2.value.imm;
+        RODATA_INFO_UPDATE_IMM(imm);
+
+        char* immLabel = GetImmediateLabel(imm);
+
+        PRINT_FORMAT_STR(", [rel %s]\n", immLabel);
+
+        free(immLabel);
+    }
+    else
+        PRINT_OPERATION(MOVSD);
 })
 
 DEF_IR_OP(F_CMP,
@@ -210,5 +222,5 @@ DEF_IR_OP(STR_OUT,
 
 DEF_IR_OP(HLT,
 {
-    PRINT_STR_WITH_SHIFT("CALL StdHLT\n");
+    PRINT_STR_WITH_SHIFT("CALL StdHlt\n");
 })

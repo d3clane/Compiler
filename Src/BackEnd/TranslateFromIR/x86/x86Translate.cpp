@@ -55,8 +55,8 @@ static inline void PrintRodataImmediates(FILE* outStream,
 static inline void PrintRodataStrings   (FILE* outStream, 
                                          const RodataStringsType*    rodataStrings);
 
-static inline char* GetStringLabel(const char* string);
-
+static inline char* GetStringLabel      (const char* string);
+static inline char* GetImmediateLabel   (const long long imm);
 //-----------------------------------------------------------------------------
 
 static inline void PrintEntry   (FILE* outStream);
@@ -184,9 +184,9 @@ static inline void PrintEntry(FILE* outStream)
 
     static const char* stdLibName = "StdLib57.s";
 
-    fprintf(outStream, "section .text\n"
-                       "global main\n"
-                       "%%include %s\n\n",
+    fprintf(outStream, "%%include '%s'\n\n"
+                       "section .text\n"
+                       "global main\n\n",
                        stdLibName);
 }
 
@@ -268,13 +268,17 @@ static inline void PrintRodataImmediates(FILE* outStream,
 
     for (size_t i = 0; i < rodataImmediates->size; ++i)
     {
-        long long value = rodataImmediates->data[i].imm;
-        doubleBytes.value = (double)value;
+        long long imm = rodataImmediates->data[i].imm;
+        doubleBytes.value = (double)imm;
 
-        fprintf(outStream, "XMM_VALUE_%lld:\n"
+        char* immLabel = GetImmediateLabel(imm);
+
+        fprintf(outStream, "%s:\n"
                            "\tdd %d\n"
                            "\tdd %d\n\n",
-                           value, doubleBytes.bytes[0], doubleBytes.bytes[1]);
+                           immLabel, doubleBytes.bytes[0], doubleBytes.bytes[1]);
+
+        free(immLabel);
     }
 }
 
@@ -288,7 +292,6 @@ static inline void PrintRodataStrings   (FILE* outStream,
     {
         const char* string = rodataStrings->data[i].string;
         char* stringLabel  = GetStringLabel(string);
-
 
         fprintf(outStream, "STR_%s:\n"
                            "\tdb \'%s\'", 
@@ -314,4 +317,14 @@ static inline char* GetStringLabel(const char* string)
     }
 
     return label;
+}
+
+static inline char* GetImmediateLabel(const long long imm)
+{
+    static const size_t maxLabelLen = 32;
+    char label[maxLabelLen] = "";
+
+    snprintf(label, maxLabelLen, "XMM_VALUE_%lld", imm);
+
+    return strdup(label);
 }

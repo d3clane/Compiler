@@ -8,8 +8,8 @@ StdFOut:
         push rbp
         mov rbp, rsp
 
-        // TODO: think about receiving on stack vs on rdi
-        movsd xmm0, [rbp - 0x10]    ; value on stack
+        ;TODO: think about receiving on stack vs on rdi
+        ;movsd xmm0, [rbp - 0x10]    ; value on stack
 
         pxor xmm1, xmm1
         comisd xmm0, xmm1

@@ -7,6 +7,6 @@ extern "C" void   StdStrOut(const char* str);
 
 int main()
 {
-    //StdFOut(StdIn());
-    StdStrOut("BEBRA SQUAD\n");
+    printf("%f", StdIn());
+    //StdStrOut("BEBRA SQUAD\n");
 }
