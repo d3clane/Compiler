@@ -48,6 +48,8 @@ static void     BuildFunc           (const TreeNode* node, CompilerInfoState* in
 static size_t   InitFuncParams      (const TreeNode* node, CompilerInfoState* info);
 static int      InitFuncLocalVars   (const TreeNode* node, CompilerInfoState* info);
 
+static inline void BuildFuncQuit    (CompilerInfoState* info);
+
 static void PatchJumps(IR* ir, const LabelTableType* labelTable);
 
 #define IR_REG(REG_NAME)   IRRegister::REG_NAME  
@@ -288,6 +290,8 @@ static void BuildFunc(const TreeNode* node, CompilerInfoState* info)
                                   IROperandImmCreate((long long)rspShift)));
 
     Build(funcNameNode->right, info);
+
+    BuildFuncQuit(info);
 }
 
 // Pascal decl
@@ -304,7 +308,6 @@ static size_t InitFuncParams(const TreeNode* node, CompilerInfoState* info)
     {
         Name pushName = {};
 
-        printf("NAME - %s, shift - %lld\n", NameTableGetName(info->allNamesTable, node->value.nameId), info->memShift);
         NameCtor(&pushName, NameTableGetName(info->allNamesTable, node->value.nameId), nullptr, 
                  info->memShift, info->regShift);
         // TODO: Name ctors strdups name. 
@@ -401,41 +404,14 @@ static void PushFuncCallArgs(const TreeNode* node, CompilerInfoState* info)
     assert(info->localTable);
     assert(info->allNamesTable);
 
-    switch (node->valueType)
+    if (node->valueType == TreeNodeValueType::OPERATION && 
+        node->value.operation == TreeOperationId::COMMA)
     {
-        case TreeNodeValueType::NAME:
-        {
-            Name* name = nullptr;
-            NameTableFind(info->localTable, 
-                          NameTableGetName(info->allNamesTable, node->value.nameId), &name);
-            // TODO: вместо поиска можно внутри ноды заапдейтить nameId
-            // или сделать стек какой-то из nameid потому что реально желательно в две стороны                         
-
-            IR_PUSH(IRNodeCreate(OP(F_MOV),
-                                 IROperandRegCreate(IR_REG(XMM0)),
-                                 IROperandMemCreate(name->memShift, name->reg)));
-
-            IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
-
-            break;
-        }
-
-        case TreeNodeValueType::OPERATION:
-        {          
-            assert(node->value.operation == TreeOperationId::COMMA);
-
-            PushFuncCallArgs(node->left,  info);
-            PushFuncCallArgs(node->right, info);
-            break;
-        }
-
-        default: // Unreachable
-        {
-            assert(false);
-
-            break;            
-        }
-    }
+        PushFuncCallArgs(node->left, info);
+        Build(node->right, info);
+    }    
+    else
+        Build(node, info);
 }
 
 static void BuildIf(const TreeNode* node, CompilerInfoState* info)
@@ -543,6 +519,11 @@ static void BuildReturn(const TreeNode* node, CompilerInfoState* info)
 
     Build(node->left, info);
     
+    BuildFuncQuit(info);
+}
+
+static inline void BuildFuncQuit(CompilerInfoState* info)
+{
     IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
 
     IR_PUSH(IRNodeCreate(OP(MOV), IROperandRegCreate(IR_REG(RSP)), 

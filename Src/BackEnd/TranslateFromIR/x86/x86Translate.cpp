@@ -186,8 +186,13 @@ static inline void PrintEntry(FILE* outStream)
 
     fprintf(outStream, "%%include '%s'\n\n"
                        "section .text\n"
-                       "global main\n\n",
+                       "global _start\n\n",
                        stdLibName);
+
+    fprintf(outStream, "_start:\n"
+                       "\tcall main\n"
+                       "\tcall StdHlt\n\n");
+
 }
 
 //-----------------------------------------------------------------------------
@@ -328,7 +333,10 @@ static inline char* GetImmediateLabel(const long long imm)
     static const size_t maxLabelLen = 32;
     char label[maxLabelLen] = "";
 
-    snprintf(label, maxLabelLen, "XMM_VALUE_%lld", imm);
+    if (imm < 0)
+        snprintf(label, maxLabelLen, "XMM_VALUE__%lld", -imm);
+    else
+        snprintf(label, maxLabelLen, "XMM_VALUE_%lld", imm);
 
     return strdup(label);
 }
