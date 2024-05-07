@@ -15,11 +15,4 @@
 /// @param [in]value value to fill with
 void FillNameTable(Name* firstBorder, Name* secondBorder, const Name value);
 
-
-/// @brief Swaps two elements
-/// @param [out]element1 
-/// @param [out]element2 
-/// @param [in]elemSize size of one element for swapping
-void NameTableSwap(void* const element1, void* const element2, const size_t elemSize);
-
 #endif // ARRAY_FUNCS_H
