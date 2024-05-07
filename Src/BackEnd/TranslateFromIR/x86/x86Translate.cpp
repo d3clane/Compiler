@@ -346,3 +346,15 @@ static inline char* CreateImmediateLabel(const long long imm)
 
     return strdup(label);
 }
+
+
+#undef PRINT_LABEL
+#undef EMPTY_OPERAND
+#undef PRINT_OPERATION
+#undef PRINT_OPERATION_TWO_OPERANDS
+#undef PRINT_OPERAND
+#undef PRINT_STR_WITH_SHIFT
+#undef PRINT_STR
+#undef PRINT_FORMAT_STR
+#undef GET_STR_LABEL
+#undef GET_IMM_LABEL
