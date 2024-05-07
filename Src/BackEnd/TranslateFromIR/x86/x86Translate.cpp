@@ -40,23 +40,20 @@ struct RodataInfo
 };
 
 static inline RodataInfo RodataInfoCtor();
-
-#define RODATA_INFO_UPDATE_STRING(STRING) RodataInfoUpdate(string, &info);
-static inline void       RodataInfoUpdate(const char* string,  RodataInfo* info);
-
-#define RODATA_INFO_UPDATE_IMM(IMM) RodataInfoUpdate(IMM, &info);
-static inline void       RodataInfoUpdate(const long long imm, RodataInfo* info);
 static inline void       RodataInfoDtor(RodataInfo* info);
 
 
 static inline void PrintRodata          (FILE* outStream, const RodataInfo* info);
-static inline void PrintRodataImmediates(FILE* outStream, 
-                                         const RodataImmediatesType* rodataImmediates);
-static inline void PrintRodataStrings   (FILE* outStream, 
-                                         const RodataStringsType*    rodataStrings);
+static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* rodataImmediates);
+static inline void PrintRodataStrings   (FILE* outStream, RodataStringsType*    rodataStrings);
 
-static inline char* GetStringLabel      (const char* string);
-static inline char* GetImmediateLabel   (const long long imm);
+#define GET_STR_LABEL(STRING) GetStringLabel(STRING, info.rodataStrings);
+static inline const char* GetStringLabel      (const char* string, RodataStringsType* rodataString);
+static inline       char* CreateStringLabel   (const char* string);
+#define GET_IMM_LABEL(IMM) GetImmediateLabel(IMM, info.rodataImmediates);
+static inline const char* GetImmediateLabel   (const long long imm, RodataImmediatesType* rodataImm);
+static inline       char* CreateImmediateLabel(const long long imm);
+
 //-----------------------------------------------------------------------------
 
 static inline void PrintEntry   (FILE* outStream);
@@ -206,36 +203,6 @@ static inline RodataInfo RodataInfoCtor()
     return info;
 }
 
-static inline void       RodataInfoUpdate(const char* string, RodataInfo* info)
-{
-    assert(info);
-
-    RodataStringsValue* value = nullptr;
-    RodataStringsFind(info->rodataStrings, string, &value);
-
-    if (value != nullptr)
-        return;
-
-    RodataStringsValue pushVal = {};
-    RodataStringsValueCtor(&pushVal, string);
-    RodataStringsPush(info->rodataStrings, pushVal);
-}
-
-static inline void       RodataInfoUpdate(const long long imm, RodataInfo* info)
-{
-    assert(info);
-
-    RodataImmediatesValue* value = nullptr;
-    RodataImmediatesFind(info->rodataImmediates, imm, &value);
-
-    if (value != nullptr)
-        return;
-
-    RodataImmediatesValue pushVal = {};
-    RodataImmediatesValueCtor(&pushVal, imm);
-    RodataImmediatesPush(info->rodataImmediates, pushVal);
-}
-
 static inline void       RodataInfoDtor(RodataInfo* info)
 {
     assert(info);
@@ -258,8 +225,7 @@ static inline void PrintRodata(FILE* outStream, const RodataInfo* info)
     PrintRodataStrings   (outStream, info->rodataStrings);
 }
 
-static inline void PrintRodataImmediates(FILE* outStream, 
-                                         const RodataImmediatesType* rodataImmediates)
+static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* rodataImmediates)
 {
     assert(outStream);
     assert(rodataImmediates);
@@ -276,19 +242,16 @@ static inline void PrintRodataImmediates(FILE* outStream,
         long long imm = rodataImmediates->data[i].imm;
         doubleBytes.value = (double)imm;
 
-        char* immLabel = GetImmediateLabel(imm);
+        const char* immLabel = GetImmediateLabel(imm, rodataImmediates);
 
         fprintf(outStream, "%s:\n"
                            "\tdd %d\n"
                            "\tdd %d\n\n",
                            immLabel, doubleBytes.bytes[0], doubleBytes.bytes[1]);
-
-        free(immLabel);
     }
 }
 
-static inline void PrintRodataStrings   (FILE* outStream, 
-                                         const RodataStringsType* rodataStrings)
+static inline void PrintRodataStrings   (FILE* outStream, RodataStringsType* rodataStrings)
 {
     assert(outStream);
     assert(rodataStrings);
@@ -296,39 +259,82 @@ static inline void PrintRodataStrings   (FILE* outStream,
     for (size_t i = 0; i < rodataStrings->size; ++i)
     {
         const char* string = rodataStrings->data[i].string;
-        char* stringLabel  = GetStringLabel(string);
+        const char* stringLabel  = GetStringLabel(string, rodataStrings);
 
         fprintf(outStream, "%s:\n"
                            "\tdb \'%s\', 0\n\n", 
                            stringLabel, string);
-
-        free(stringLabel);
     }
 }
 
-static inline char* GetStringLabel(const char* string)
+static inline char* CreateStringLabel(const char* string)
 {
     assert(string);
 
-    static const char* labelPrefix = "STR_LABEL_";
-    size_t labelLength = strlen(string) + strlen(labelPrefix) + 1;
-    char* label = (char*)calloc(labelLength, sizeof(*label));
-    char* labelPtr = label;
+    static size_t labelId = 0;
 
-    snprintf(label, labelLength, "%s%s", labelPrefix, string);
+    static const size_t maxLabelLen = 32;
+    char label[maxLabelLen] = "";
 
-    while (*labelPtr)
-    {
-        if (*labelPtr == ' ' || *labelPtr == ':')
-            *labelPtr = '_';
+    snprintf(label, maxLabelLen, "STR_%zu", labelId);
+    ++labelId;
 
-        labelPtr++;   
-    }
-
-    return label;
+    return strdup(label);   
 }
 
-static inline char* GetImmediateLabel(const long long imm)
+static inline const char* GetStringLabel(const char* string, 
+                                         RodataStringsType* rodataStrings)
+{
+    assert(string);
+
+    RodataStringsValue* value = nullptr;
+    RodataStringsFind(rodataStrings, string, &value);
+
+    if (value == nullptr)
+    {
+        char* label = CreateStringLabel(string);
+
+        RodataStringsValue pushValue = {};
+        RodataStringsValueCtor(&pushValue, string, label);
+        RodataStringsPush(rodataStrings, pushValue);
+
+        RodataStringsFind(rodataStrings, string, &value);
+
+        free(label);
+    }
+
+    assert(value);
+    assert(value->label);
+
+    return value->label;
+}
+
+static inline const char* GetImmediateLabel(const long long imm, 
+                                            RodataImmediatesType* rodataImmediates)
+{
+    RodataImmediatesValue* value = nullptr;
+    RodataImmediatesFind(rodataImmediates, imm, &value);
+
+    if (value == nullptr)
+    {
+        char* label = CreateImmediateLabel(imm);
+
+        RodataImmediatesValue pushValue = {};
+        RodataImmediatesValueCtor(&pushValue, imm, label);
+        RodataImmediatesPush(rodataImmediates, pushValue);
+
+        RodataImmediatesFind(rodataImmediates, imm, &value);
+
+        free(label);
+    }
+
+    assert(value);
+    assert(value->label);
+    
+    return value->label;
+}
+
+static inline char* CreateImmediateLabel(const long long imm)
 {
     static const size_t maxLabelLen = 32;
     char label[maxLabelLen] = "";

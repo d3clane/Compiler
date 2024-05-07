@@ -648,7 +648,8 @@ void RodataStringsPrintError(RodataStringsErrors error)
 
 #undef PRINT_ERR
 
-void RodataStringsValueCtor(RodataStringsValue* value, const char* string)
+void RodataStringsValueCtor(RodataStringsValue* value, const char* string, const char* label)
 {
     value->string = strdup(string);
+    value->label  = strdup(label);
 }

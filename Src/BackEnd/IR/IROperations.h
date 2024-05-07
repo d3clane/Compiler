@@ -132,13 +132,9 @@ DEF_IR_OP(F_MOV,
         PRINT_OPERAND(node->operand1);
 
         long long imm = node->operand2.value.imm;
-        RODATA_INFO_UPDATE_IMM(imm);
-
-        char* immLabel = GetImmediateLabel(imm);
+        const char* immLabel = GET_IMM_LABEL(imm);
 
         PRINT_FORMAT_STR(", [rel %s]\n", immLabel);
-
-        free(immLabel);
     }
     else
         PRINT_OPERATION(MOVSD);
@@ -211,14 +207,11 @@ DEF_IR_OP(F_IN,
 DEF_IR_OP(STR_OUT,
 {
     const char* string = node->operand1.value.string;
-    char* stringLabel  = GetStringLabel(string);
+    const char* stringLabel  = GET_STR_LABEL(string);
 
     PRINT_FORMAT_STR    ("\tLEA RAX, [rel %s]\n", stringLabel);
     PRINT_STR_WITH_SHIFT("PUSH RAX\n");
     PRINT_STR_WITH_SHIFT("CALL StdStrOut\n");
-    RODATA_INFO_UPDATE_STRING(stringLabel);
-
-    free(stringLabel);
 })
 
 DEF_IR_OP(HLT,

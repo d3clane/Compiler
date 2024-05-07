@@ -10,7 +10,8 @@
 
 struct RodataStringsValue
 {
-    char*      string;
+    char* string;
+    char* label;
 };
 
 /// @brief Chosen RODATA_STRINGS_POISON value for stack

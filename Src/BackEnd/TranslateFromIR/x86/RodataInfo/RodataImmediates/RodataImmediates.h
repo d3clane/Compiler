@@ -151,6 +151,6 @@ static inline long long RodataImmediatesGetImmediate(const RodataImmediatesType*
 /// @param [in]error error to print
 void RodataImmediatesPrintError(RodataImmediatesErrors error);
 
-void RodataImmediatesValueCtor(RodataImmediatesValue* value, const long long imm);
+void RodataImmediatesValueCtor(RodataImmediatesValue* value, const long long imm, const char* label);
 
 #endif // RODATA_IMMEDIATES_H

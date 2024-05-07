@@ -113,7 +113,7 @@ RodataStringsErrors RodataStringsDtor(RodataStringsType* const stk);
 /// @return errors that occurred
 RodataStringsErrors RodataStringsPush(RodataStringsType* stk, const RodataStringsValue val);
 
-RodataStringsErrors RodataStringsFind(const RodataStringsType* table, const char* name, RodataStringsValue** outString);
+RodataStringsErrors RodataStringsFind(const RodataStringsType* table, const char* string, RodataStringsValue** outString);
 
 RodataStringsErrors RodataStringsGetPos(const RodataStringsType* table, RodataStringsValue* namePtr, size_t* outPos);
 
@@ -142,15 +142,15 @@ static inline bool RodataStringsIsEmpty(const RodataStringsType* stk)
     return stk->size == 0;
 }
 
-static inline const char* RodataStringsGetString(const RodataStringsType* table, size_t pos)
+static inline const char* RodataStringsGetLabel(const RodataStringsType* table, size_t pos)
 {
-    return table->data[pos].string;
+    return table->data[pos].label;
 }
 
 /// @brief Prints nameTable error to log file
 /// @param [in]error error to print
 void RodataStringsPrintError(RodataStringsErrors error);
 
-void RodataStringsValueCtor(RodataStringsValue* value, const char* string);
+void RodataStringsValueCtor(RodataStringsValue* value, const char* string, const char* label);
 
 #endif // RODATA_STRINGS_H

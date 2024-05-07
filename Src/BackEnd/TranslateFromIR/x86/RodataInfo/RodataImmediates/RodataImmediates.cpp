@@ -647,7 +647,8 @@ void RodataImmediatesPrintError(RodataImmediatesErrors error)
 
 #undef PRINT_ERR
 
-void RodataImmediatesValueCtor(RodataImmediatesValue* value, const long long imm)
+void RodataImmediatesValueCtor(RodataImmediatesValue* value, const long long imm, const char* label)
 {
-    value->imm = imm;
+    value->imm   = imm;
+    value->label = strdup(label);
 }

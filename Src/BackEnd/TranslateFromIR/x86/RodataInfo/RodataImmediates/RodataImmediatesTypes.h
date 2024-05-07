@@ -11,7 +11,7 @@
 struct RodataImmediatesValue
 {
     long long imm;
-
+    char*     label;
 };
 
 /// @brief Chosen RODATA_IMMEDIATES_POISON value for stack
