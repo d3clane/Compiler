@@ -37,6 +37,9 @@ DEF_IR_OP(MOV,
 DEF_IR_OP(ADD,
 {
     PRINT_OPERATION(ADD);
+},
+{
+    
 })
 
 DEF_IR_OP(SUB,

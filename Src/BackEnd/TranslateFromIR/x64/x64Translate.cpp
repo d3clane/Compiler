@@ -14,7 +14,8 @@ static inline void PrintLabel(FILE* outStream, const char* label);
 #define EMPTY_OPERAND IROperandCtor()
 
 #define PRINT_OPERATION(OPERATION) PrintOperation(outStream, #OPERATION, node)
-static inline void PrintOperation(FILE* outStream, const char* operationName, const IRNode* node);
+static inline void PrintOperation(FILE* outStream, FILE* outBin, 
+                                  const char* operationName, const IRNode* node);
 
 #define PRINT_OPERATION_TWO_OPERANDS(OPERATION, OPERAND1, OPERAND2)         \
     PrintOperation(outStream, #OPERATION, OPERAND1, OPERAND2)               
@@ -69,7 +70,7 @@ void TranslateToX86(const IR* ir, FILE* outStream)
     RodataInfo info = RodataInfoCtor();
 
     IRNode* beginNode = IRHead(ir);
-    IRNode* node = beginNode;
+    IRNode* node = beginNode->nextNode;
 
 #define DEF_IR_OP(OP_NAME, X86_ASM_CODE, ...)           \
     case IROperation::OP_NAME:                          \
@@ -107,8 +108,8 @@ static inline void PrintLabel(FILE* outStream, const char* label)
     fprintf(outStream, "%s:\n", label);
 }
 
-static inline void PrintOperation(FILE* outStream, const char* operationName,
-                                  size_t numberOfOperands, 
+static inline void PrintOperation(FILE* outStream, FILE* outBin, 
+                                  const char* operationName, size_t numberOfOperands, 
                                   const IROperand operand1, const IROperand operand2)
 {
     fprintf(outStream, "\t%s ", operationName);
@@ -124,14 +125,15 @@ static inline void PrintOperation(FILE* outStream, const char* operationName,
     fprintf(outStream, "\n");
 }   
 
-static inline void PrintOperation(FILE* outStream, const char* operationName, const IRNode* node)
+static inline void PrintOperation(FILE* outStream, FILE* outBin,    
+                                  const char* operationName, const IRNode* node)
 {
     PrintOperation(outStream, operationName, node->numberOfOperands, 
                    node->operand1, node->operand2);
 }
 
 static inline void PrintOperation(FILE* outStream, const char* operationName, 
-                                   const IROperand operand1, const IROperand operand2)
+                                  const IROperand operand1, const IROperand operand2)
 {
     PrintOperation(outStream, operationName, 2, operand1, operand2);
 }
