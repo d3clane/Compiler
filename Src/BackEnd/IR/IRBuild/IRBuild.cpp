@@ -558,8 +558,6 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
 
     IROperation jumpOp = IROperation::JMP;
 
-    // TODO: think about code gen 
-
 #define GENERATE_OPERATION_CMD(OPERATION_ID, _1, _2, _3, IR_JMP_OP, ...)        \
     case TreeOperationId::OPERATION_ID:                                         \
         jumpOp = OP(IR_JMP_OP);                                                 \
