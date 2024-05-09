@@ -235,6 +235,7 @@ RodataImmediatesErrors RodataImmediatesDtor(RodataImmediatesType* const rodataIm
     
     for (size_t i = 0; i < rodataImmediates->size; ++i)
     {
+        free(rodataImmediates->data[i].label);
         rodataImmediates->data[i] = RODATA_IMMEDIATES_POISON;
     }
 

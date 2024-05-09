@@ -5,7 +5,7 @@
 // DEF_IR_OP(OP_NAME, ...)
 
 // PRINT_LABEL(LABEL) - prints label to outStream x86 asm
-// Vars : const IR* ir, FILE* outStream, IRNode* node
+// Vars : IRNode* node
 
 DEF_IR_OP(NOP,
 {
@@ -37,9 +37,6 @@ DEF_IR_OP(MOV,
 DEF_IR_OP(ADD,
 {
     PRINT_OPERATION(ADD);
-},
-{
-    
 })
 
 DEF_IR_OP(SUB,

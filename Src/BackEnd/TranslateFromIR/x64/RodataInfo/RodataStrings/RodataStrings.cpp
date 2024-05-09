@@ -236,6 +236,7 @@ RodataStringsErrors RodataStringsDtor(RodataStringsType* const rodataStrings)
     for (size_t i = 0; i < rodataStrings->size; ++i)
     {
         free(rodataStrings->data[i].string);
+        free(rodataStrings->data[i].label);
         rodataStrings->data[i] = RODATA_STRINGS_POISON;
     }
 
