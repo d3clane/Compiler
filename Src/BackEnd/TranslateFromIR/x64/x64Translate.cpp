@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "x86Translate.h"
+#include "x64Translate.h"
 #include "RodataInfo/RodataImmediates/RodataImmediates.h"
 #include "RodataInfo/RodataStrings/RodataStrings.h"
 
@@ -14,7 +14,7 @@ static inline void PrintLabel(FILE* outStream, const char* label);
 #define EMPTY_OPERAND IROperandCtor()
 
 #define PRINT_OPERATION(OPERATION) PrintOperation(outStream, #OPERATION, node)
-static inline void PrintOperation(FILE* outStream, FILE* outBin, 
+static inline void PrintOperation(FILE* outStream,
                                   const char* operationName, const IRNode* node);
 
 #define PRINT_OPERATION_TWO_OPERANDS(OPERATION, OPERAND1, OPERAND2)         \
@@ -61,7 +61,7 @@ static inline void PrintEntry   (FILE* outStream);
 
 //-----------------------------------------------------------------------------
 
-void TranslateToX86(const IR* ir, FILE* outStream)
+void TranslateToX64(const IR* ir, FILE* outStream)
 {
     assert(ir);
 
@@ -108,7 +108,7 @@ static inline void PrintLabel(FILE* outStream, const char* label)
     fprintf(outStream, "%s:\n", label);
 }
 
-static inline void PrintOperation(FILE* outStream, FILE* outBin, 
+static inline void PrintOperation(FILE* outStream,
                                   const char* operationName, size_t numberOfOperands, 
                                   const IROperand operand1, const IROperand operand2)
 {
@@ -125,7 +125,7 @@ static inline void PrintOperation(FILE* outStream, FILE* outBin,
     fprintf(outStream, "\n");
 }   
 
-static inline void PrintOperation(FILE* outStream, FILE* outBin,    
+static inline void PrintOperation(FILE* outStream,
                                   const char* operationName, const IRNode* node)
 {
     PrintOperation(outStream, operationName, node->numberOfOperands, 
