@@ -663,7 +663,7 @@ static void PatchJumps(IR* ir, const LabelTableType* labelTable)
     {
         if (node->needPatch && !node->jumpTarget)
         {
-            assert(node->operand1.type == IROperandType::STR);
+            assert(node->operand1.type == IROperandType::LABEL);
 
             LabelTableValue* outLabel = nullptr;
             LabelTableFind(labelTable, node->operand1.value.string, &outLabel);

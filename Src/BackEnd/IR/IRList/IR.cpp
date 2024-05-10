@@ -234,7 +234,7 @@ void IROperandTextDump(const IROperand operand)
             break;
         case TYPE(LABEL):
             Log("LABEL: \n");
-            break
+            break;
 
         default: // Unreachable
             assert(false);
