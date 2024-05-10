@@ -88,6 +88,11 @@ IROperand IROperandStrCreate(const char* str)
     return IROperandCreate(CREATE_VALUE(0, IR_REG(NO_REG), str), TYPE(STR));
 }
 
+IROperand IROperandLabelCreate  (const char* label)
+{
+    return IROperandCreate(CREATE_VALUE(0, IR_REG(NO_REG), label), TYPE(LABEL));
+}
+
 IROperand IROperandMemCreate(const long long imm, IRRegister reg)
 {
     return IROperandCreate(CREATE_VALUE(imm, reg), TYPE(MEM));
@@ -225,8 +230,11 @@ void IROperandTextDump(const IROperand operand)
             Log("MEM: \n");
             break;
         case TYPE(STR):
-            Log("STR \n");
+            Log("STR: \n");
             break;
+        case TYPE(LABEL):
+            Log("LABEL: \n");
+            break
 
         default: // Unreachable
             assert(false);

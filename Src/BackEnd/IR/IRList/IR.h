@@ -15,6 +15,8 @@ enum class IROperandType
     IMM, 
     MEM,
     REG,
+
+    LABEL,
     STR,    /// < string operand
 };
 
@@ -98,10 +100,11 @@ IROperand IROperandCtor();
 IROperand IROperandCreate(IROperandValue val, IROperandType type);
 IRNode*   IRNodeCtor();
 
-IROperand IROperandRegCreate(IRRegister reg);
-IROperand IROperandImmCreate(const long long imm);
-IROperand IROperandStrCreate(const char* str);
-IROperand IROperandMemCreate(const long long imm, IRRegister reg);
+IROperand IROperandRegCreate    (IRRegister reg);
+IROperand IROperandImmCreate    (const long long imm);
+IROperand IROperandStrCreate    (const char* str);
+IROperand IROperandMemCreate    (const long long imm, IRRegister reg);
+IROperand IROperandLabelCreate  (const char* label);
 
 //-----------------------------------------------
 

@@ -391,7 +391,7 @@ static void BuildFuncCall(const TreeNode* node, CompilerInfoState* info)
 
     const char* funcName = NameTableGetName(info->allNamesTable, node->left->value.nameId);
 
-    IR_PUSH(IRNodeCreate(OP(CALL), IROperandStrCreate(funcName), true));
+    IR_PUSH(IRNodeCreate(OP(CALL), IROperandLabelCreate(funcName), true));
 
     // pushing ret value on stack
     IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
@@ -443,7 +443,7 @@ static void BuildIf(const TreeNode* node, CompilerInfoState* info)
     IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)), 
                                     IROperandRegCreate(IR_REG(XMM1))));
 
-    IR_PUSH(IRNodeCreate(OP(JE), IROperandStrCreate(ifEndLabel), true));
+    IR_PUSH(IRNodeCreate(OP(JE), IROperandLabelCreate(ifEndLabel), true));
 
     Build(node->right, info);
 
@@ -479,11 +479,11 @@ static void BuildWhile(const TreeNode* node, CompilerInfoState* info)
     IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)), 
                                     IROperandRegCreate(IR_REG(XMM1))));
                                                
-    IR_PUSH(IRNodeCreate(OP(JE), IROperandStrCreate(whileEndLabel), true));
+    IR_PUSH(IRNodeCreate(OP(JE), IROperandLabelCreate(whileEndLabel), true));
 
     Build(node->right, info);
 
-    IR_PUSH(IRNodeCreate(OP(JMP), IROperandStrCreate(whileBeginLabel), true));
+    IR_PUSH(IRNodeCreate(OP(JMP), IROperandLabelCreate(whileBeginLabel), true));
 
     IR_PUSH_LABEL(whileEndLabel);
 }
@@ -574,13 +574,13 @@ static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
 
 #undef GENERATE_OPERATION_CMD
 
-    IR_PUSH(IRNodeCreate(jumpOp, IROperandStrCreate(comparePushTrue), true));
+    IR_PUSH(IRNodeCreate(jumpOp, IROperandLabelCreate(comparePushTrue), true));
 
     IR_PUSH(IRNodeCreate(OP(F_XOR),  IROperandRegCreate(IR_REG(XMM0)),
                                      IROperandRegCreate(IR_REG(XMM0))));
     IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
 
-    IR_PUSH(IRNodeCreate(OP(JMP), IROperandStrCreate(compareEnd), true));
+    IR_PUSH(IRNodeCreate(OP(JMP), IROperandLabelCreate(compareEnd), true));
 
     IR_PUSH_LABEL(comparePushTrue);
 
