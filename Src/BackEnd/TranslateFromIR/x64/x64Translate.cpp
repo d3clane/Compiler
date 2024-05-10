@@ -163,12 +163,16 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand)
                     IRRegisterGetName(operand.value.reg), operand.value.imm);
 
             break;
-
-        case IROperandType::STR:
+        
+        case IROperandType::LABEL:
             assert(operand.value.string);
             fprintf(outStream, "%s", operand.value.string);
             break;
 
+        case IROperandType::STR: // Unreachable
+            assert(false);
+            break;
+            
         default: // Unreachable
             assert(false);
             break;
