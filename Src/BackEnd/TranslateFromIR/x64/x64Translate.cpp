@@ -172,7 +172,7 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand)
         case IROperandType::STR: // Unreachable
             assert(false);
             break;
-            
+
         default: // Unreachable
             assert(false);
             break;

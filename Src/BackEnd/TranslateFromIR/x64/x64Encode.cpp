@@ -27,65 +27,58 @@ static inline void SetOperands(X64Instruction* instruction, size_t numberOfOpera
 static inline void SetOperand (X64Instruction* instruction, 
                                X64Operand operand1, X64OperandByteTarget operand1Target);
 
+static inline void SetRex (X64Instruction* instruction); // Simply set rex to 0b01000000
 static inline void SetRexB(X64Instruction* instruction, uint8_t bit);
 static inline void SetRexW(X64Instruction* instruction, uint8_t bit);
 static inline void SetRexR(X64Instruction* instruction, uint8_t bit);
 
+#define EMPTY_BYTE_TARGET   X64OperandByteTarget::IMM32 // some default value
 #define BYTE_TARGET(TARGET) X64OperandByteTarget::TARGET
 
+X64Instruction X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
+                                  X64Operand operand1, X64Operand operand2,
+                                  X64OperandByteTarget operand1Target, 
+                                  X64OperandByteTarget operand2Target)
+{
+    SetRexRequirement(instruction, numberOfOperands, operand1, operand2);
 
-#define X64_INSTRUCTION_CREATE(OPCODE, TARGET1, TARGET2,                                    \
-                               REQ_MANDATORY_PREFIX, REQ_REX_BY_DEFAULT, REQ_OPCODE_PREF1,  \
-                               REQ_OPCODE_PREF2, REQ_DISP32, REQ_IMM32, REQ_REG_IN_OPCODE,  \
-                               MANDATORY_PREFIX, OPCODE_PREF1, OPCODE_PREF2)                \
-    X64InstructionCreate(OPCODE, numberOfOperands)
-X64Instruction X64InstructionCreate
-(uint8_t opcode, size_t numberOfOperands, 
- X64Operand operand1, X64Operand operand2,
- X64OperandByteTarget operand1Target, X64OperandByteTarget operand2Target,
- bool requireMandatoryPrefix, bool requireREXByDefault, 
- bool requireOpcodePrefix1, bool requireOpcodePrefix2,
- bool requireDisp32, bool requireImm32, bool requireImm16, bool requireRegInOpcode,
- uint8_t mandatoryPrefix, uint8_t opcodePrefix1, uint8_t opcodePrefix2)
+    SetOperands(instruction, numberOfOperands, operand1, operand2, 
+                operand1Target, operand2Target);
+}
+
+X64Instruction X64InstructionCtor()
 {
     X64Instruction instruction = {};
 
-#define SET(INFO) instruction.##INFO = ##INFO;
-    SET(requireMandatoryPrefix);
-    SET(requireOpcodePrefix1);
-    SET(requireOpcodePrefix2);
-    SET(requireDisp32);
-    SET(requireImm32);
-    SET(requireImm16);
-    SET(mandatoryPrefix);
-    SET(opcodePrefix1);
-    SET(opcodePrefix2);
-    SET(opcode);
-#undef SET
+#define I instruction
+#define SET_0(FIELD) instruction. ##FIELD = 0;
+    SET_0(requireMandatoryPrefix);
+    SET_0(requireREX);
+    SET_0(requireOpcodePrefix1);
+    SET_0(requireOpcodePrefix2);
+    SET_0(requireModRM);
+    SET_0(requireSIB);
+    SET_0(requireDisp32);
+    SET_0(requireImm32);
+    SET_0(requireImm16);
 
-    instruction.requireREX = requireREXByDefault;
+    SET_0(mandatoryPrefix);
+    SET_0(rex);
+    SET_0(opcodePrefix1);
+    SET_0(opcodePrefix2);
+    SET_0(opcode);
+    SET_0(modRM);
+    SET_0(sib);
+    SET_0(disp32);
+    SET_0(imm32);
+    SET_0(imm16);
+#undef SET_0
 
-    if (operand1Target == BYTE_TARGET(MODRM_REG) || operand1Target == BYTE_TARGET(MODRM_RM) ||
-        operand2Target == BYTE_TARGET(MODRM_REG) || operand2Target == BYTE_TARGET(MODRM_RM))
-        instruction.requireModRM = true;
+    SetRex(&instruction);
     
-    if (operand1Target == BYTE_TARGET(SIB) || operand2Target == BYTE_TARGET(SIB))
-    {
-        instruction.requireModRM = true;
-        instruction.requireSIB   = true;
-    }
-
-    SetRexRequirement(&instruction, numberOfOperands, operand1, operand2);
-
-    static const size_t standardRex = 0x40;
-    if (instruction.requireREX)
-        instruction.rex = standardRex;
-
-    SetOperands(&instruction, numberOfOperands, operand1, operand2, 
-                operand1Target, operand2Target);
-
     return instruction;
-} 
+}
+
 
 X64Operand ConvertIRToX64Operand(IROperand irOperand)
 {
@@ -94,6 +87,7 @@ X64Operand ConvertIRToX64Operand(IROperand irOperand)
     x64Operand.type  = ConvertIRToX64OperandType (irOperand.type);
     x64Operand.value = ConvertIRToX64OperandValue(irOperand.value);
 
+    return x64Operand;
 }
 
 X64OperandType ConvertIRToX64OperandType(IROperandType type)
@@ -116,7 +110,7 @@ X64OperandType ConvertIRToX64OperandType(IROperandType type)
             break;
 
         case IROperandType::LABEL:
-            x64Type = X64OperandType::IMM; // labels are converted to strings
+            x64Type = X64OperandType::IMM; // labels are converted to offsets
             break;
 
         default:    // Unreachable
@@ -134,6 +128,8 @@ X64OperandValue ConvertIRToX64OperandValue  (IROperandValue value)
 
     x64Value.imm = value.imm;
     x64Value.reg = ConvertIRToX64Register(value.reg);
+
+    return x64Value;
 }
 
 X64Register     ConvertIRToX64Register      (IRRegister reg)
@@ -151,6 +147,11 @@ X64Register     ConvertIRToX64Register      (IRRegister reg)
             break;
     }
 #undef DEF_IR_REG    
+
+    // Unreachable
+
+    assert(false);
+    return X64Register::NO_REG;
 }
 
 static inline void SetRexRequirement(X64Instruction* instruction, 
@@ -202,7 +203,10 @@ static inline void SetOperands(X64Instruction* instruction, size_t numberOfOpera
 {
     assert(instruction);
 
-    if (instruction->requireRegInOpcode)
+    if (numberOfOperands == 0)
+        return;
+    
+    if (operand1Target == BYTE_TARGET(OPCODE))
     {
         assert(numberOfOperands == 1);
         assert(operand1.type == X64OperandType::REG);
@@ -214,8 +218,7 @@ static inline void SetOperands(X64Instruction* instruction, size_t numberOfOpera
         return;
     }
 
-    if (numberOfOperands > 0)
-        SetOperand(instruction, operand1, operand1Target);
+    SetOperand(instruction, operand1, operand1Target);
 
     if (numberOfOperands > 1)
         SetOperand(instruction, operand2, operand2Target);
@@ -320,10 +323,9 @@ static inline void SetOperand (X64Instruction* instruction,
 
 static inline void SetModRmReg(X64Instruction* instruction, X64Operand operand)
 {
-    static const size_t regFieldShift = 3;
 #define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT, ...)               \
     case X64Register::REG:                                      \
-        instruction->modRM |= (LOW_BITS << regFieldShift);      \
+        SetModRmRegField(instruction, LOW_BITS);                \
         SetRexR(instruction, HIGH_BIT);                         \
         break;
     
@@ -377,6 +379,13 @@ static inline void SetModRmModField(X64Instruction* instruction, uint8_t mod)
     static const size_t modFieldShift = 6;
 
     instruction->modRM |= (mod << modFieldShift);
+}
+
+static inline void SetModRmRegField(X64Instruction* instruction, uint8_t bits)
+{
+    static const size_t regFieldShift = 3;
+    
+    instruction->modRM |= (bits << regFieldShift);
 }
 
 static inline void SetSibDisp32(X64Instruction* instruction, X64Operand operand)
@@ -476,3 +485,27 @@ static inline void SetRexR(X64Instruction* instruction, uint8_t bit)
     
     instruction->rex |= (bit << rexRFieldShift);
 }
+
+//-----------------------------------------------------------------------------
+
+#define X64_INSTRUCTION_INIT(OPERAND1_TARGET, OPERAND2_TARGET)              \
+    X64InstructionInit(&instruction, numberOfOperands, operand1, operand2,  \
+                       OPERAND1_TARGET, OPERAND2_TARGET)
+
+char* EncodeX64(X64Operation operation, size_t numberOfOperands, 
+                X64Operand operand1, X64Operand operand2)
+{
+    X64Instruction instruction = X64InstructionCtor();
+#define I instruction
+
+#define DEF_X64_OP(OP, INSTRUCTION_CTOR_CODE, ...)              \
+    case X64Operation::OP:                                      \
+        INSTRUCTION_CTOR_CODE;                                  \
+        break;
+    
+
+
+}
+
+char* EncodeX64(X64Operation operation, X64Operand operand1, X64Operand operand2);
+char* EncodeX64(X64Operation operation, X64Operand operand);

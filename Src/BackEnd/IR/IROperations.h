@@ -3,9 +3,8 @@
 #endif
 
 // DEF_IR_OP(OP_NAME, ...)
-
 // PRINT_LABEL(LABEL) - prints label to outStream x86 asm
-// Vars : IRNode* node
+// Vars : IRNode*
 
 DEF_IR_OP(NOP,
 {

@@ -10,26 +10,45 @@
 
 DEF_X64_OP(NOP,
 {
-    X64InstructionCreate(0x90, 
-                         false, )
-    return 
-    X64InstructionCreate(0x90, 
-                       false, false, false, false, false, false, false, false, 
-                       EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY);
+    I.opcode = 0x90;
+    X64_INSTRUCTION_INIT(EMPTY_BYTE_TARGET, EMPTY_BYTE_TARGET);
 })
 
 DEF_X64_OP(PUSH,
 {
     assert(numberOfOperands == 1 && operand1.type == X86OperandType::REG);
-    X64InstructionCreate(0x50 | )
+    
+    I.opcode = 0x50;
+    I.requireRegInOpcode = true;
+
+    X64_INSTRUCTION_INIT(EMPTY_BYTE_TARGET())
+    
+    instruction = 
+    {
+        .
+    }
+        X64_INSTRUCTION_CREATE(0x50, EMPTY_BYTE_TARGET, EMPTY_BYTE_TARGET, 
+        false, false, false, false, false, false, false, true, // Require reg in opcode
+        EMPTY_BYTE, EMPTY_BYTE, EMPTY_BYTE, EMPTY_BYTE);
 })
 
 DEF_X64_OP(POP,
 {
+    assert(numberOfOperands == 1 && operand1.type == X64OperandType::REG);
+    
+    instruction = 
+        X64_INSTRUCTION_CREATE(0x58, EMPTY_BYTE_TARGET, EMPTY_BYTE_TARGET, 
+        false, false, false, false, false, false, false, true, // Require reg in opcode
+        EMPTY_BYTE, EMPTY_BYTE, EMPTY_BYTE, EMPTY_BYTE);
 })
 
 DEF_X64_OP(MOV,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+
+    instruction = 
+        X64_INSTRUCTION_CREATE(0)
 })
 
 DEF_X64_OP(ADD,

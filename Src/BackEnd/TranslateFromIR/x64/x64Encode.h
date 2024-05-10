@@ -10,6 +10,12 @@ enum class X64Register
     #include "x64RegistersDefs.h"
 };
 #undef DEF_X64_REG
+#define DEF_X64_OP(NAME, ...) NAME,
+enum class X64Operation
+{
+    #include "x64Operations.h"
+};
+#undef DEF_X64_OP
 
 struct X64Instruction
 {
@@ -24,8 +30,6 @@ struct X64Instruction
         bool requireDisp32              : 1;
         bool requireImm32               : 1;
         bool requireImm16               : 1;
-
-        bool requireRegInOpcode         : 1;
     };
 
     uint8_t mandatoryPrefix;
@@ -62,7 +66,8 @@ struct X64Operand
 
 enum class X64OperandByteTarget
 {
-    // TODO: think about requireRegInOpcode
+    OPCODE,
+
     MODRM_REG,
     MODRM_RM,
 
@@ -74,18 +79,21 @@ enum class X64OperandByteTarget
     IMM16,      ///< for RET instruction
 };
 
-X64Instruction X64InstructionCreate
-(uint8_t opcode, size_t numberOfOperands, 
- X64Operand operand1, X64Operand operand2,
- X64OperandByteTarget operand1Target, X64OperandByteTarget operand2Target,
- bool requireMandatoryPrefix, bool requireREXByDefault, 
- bool requireOpcodePrefix1, bool requireOpcodePrefix2,
- bool requireDisp32, bool requireImm32, bool requireImm16, bool requireRegInOpcode,
- uint8_t mandatoryPrefix, uint8_t opcodePrefix1, uint8_t opcodePrefix2);
+X64Instruction X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
+                                  X64Operand operand1, X64Operand operand2,
+                                  X64OperandByteTarget operand1Target, 
+                                  X64OperandByteTarget operand2Target);
+
+X64Instruction X64InstructionCtor();
 
 X64Operand      ConvertIRToX64Operand       (IROperand irOperand);
 X64OperandValue ConvertIRToX64OperandValue  (IROperandValue value);
 X64OperandType  ConvertIRToX64OperandType   (IROperandType type);
 X64Register     ConvertIRToX64Register      (IRRegister reg);
+
+char* EncodeX64(X64Operation operation, size_t numberOfOperands, 
+                X64Operand operand1, X64Operand operand2);
+char* EncodeX64(X64Operation operation, X64Operand operand1, X64Operand operand2);
+char* EncodeX64(X64Operation operation, X64Operand operand);
 
 #endif 
