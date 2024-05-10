@@ -83,6 +83,9 @@ X64Instruction X64InstructionCreate
  bool requireDisp32, bool requireImm32, bool requireImm16, bool requireRegInOpcode,
  uint8_t mandatoryPrefix, uint8_t opcodePrefix1, uint8_t opcodePrefix2);
 
-X64Operand ConvertIRToX64Operand(IROperand irOperand);
+X64Operand      ConvertIRToX64Operand       (IROperand irOperand);
+X64OperandValue ConvertIRToX64OperandValue  (IROperandValue value);
+X64OperandType  ConvertIRToX64OperandType   (IROperandType type);
+X64Register     ConvertIRToX64Register      (IRRegister reg);
 
 #endif 

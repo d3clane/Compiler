@@ -91,30 +91,67 @@ X64Operand ConvertIRToX64Operand(IROperand irOperand)
 {
     X64Operand x64Operand = {};
 
+    x64Operand.type  = ConvertIRToX64OperandType (irOperand.type);
+    x64Operand.value = ConvertIRToX64OperandValue(irOperand.value);
+
+}
+
+X64OperandType ConvertIRToX64OperandType(IROperandType type)
+{
+    X64OperandType x64Type = X64OperandType::IMM;
+
 #define CASE(IR_TYPE)                               \
     case IROperandType::IR_TYPE:                    \
-        x64Operand.type = X64OperandType::IR_TYPE;  \
+        x64Type = X64OperandType::IR_TYPE;          \
         break;
 
-    switch (irOperand.type)
+    switch (type)
     {
         CASE(IMM);
         CASE(REG);
         CASE(MEM);
 
         case IROperandType::STR:
-            // TODO: проблема - у меня строчка фактически в двух кейсах - 
-            // лейбел для прыжка, строчка для вывода. Ваще надо разделить эти кейсы потому что лейбл 
-            // - это фактически imm32, а строчка это RIP адрессация
-        case IROperandType::IMM:
-            x64Operand.type = X64OperandType::IMM;
+            x64Type = X64OperandType::MEM; // string in rodata
             break;
-        
-        default:
+
+        case IROperandType::LABEL:
+            x64Type = X64OperandType::IMM; // labels are converted to strings
+            break;
+
+        default:    // Unreachable
+            assert(false);
             break;
     }
+#undef CASE
+
+    return x64Type;
 }
 
+X64OperandValue ConvertIRToX64OperandValue  (IROperandValue value)
+{
+    X64OperandValue x64Value = {};
+
+    x64Value.imm = value.imm;
+    x64Value.reg = ConvertIRToX64Register(value.reg);
+}
+
+X64Register     ConvertIRToX64Register      (IRRegister reg)
+{
+#define DEF_IR_REG(REG, ...)                \
+    case IRRegister::REG:                   \
+        return X64Register::REG;            \
+
+    switch (reg)
+    {
+        #include "BackEnd/IR/IRRegistersDefs.h"
+
+        default: // Unreachable
+            assert(false);
+            break;
+    }
+#undef DEF_IR_REG    
+}
 
 static inline void SetRexRequirement(X64Instruction* instruction, 
                                      size_t numberOfOperands,
@@ -138,7 +175,7 @@ static inline void SetRexRequirement(X64Instruction* instruction, X64Operand ope
 {
     assert(instruction);
 
-    if (operand.value.reg == X64Register::NONE)
+    if (operand.value.reg == X64Register::NO_REG)
         return;
     
 #define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT, ...)       \
