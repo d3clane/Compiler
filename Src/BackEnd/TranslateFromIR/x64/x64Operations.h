@@ -234,7 +234,7 @@ DEF_X64_OP(COMISD,
     instruction.requireOpcodePrefix1   = true; 
     instruction.opcodePrefix1          = OpcodePrefix1_0F;
 
-    instruction.opcode = 0xEF;
+    instruction.opcode = 0x2F;
     
     X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
