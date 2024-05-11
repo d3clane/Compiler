@@ -41,7 +41,7 @@ static inline void SetRegInOpcode               (X64Instruction* instruction, X6
 static inline void SetModRmReg                  (X64Instruction* instruction, X64Operand operand);
 static inline void SetModRmDirectAddressingMod  (X64Instruction* instruction);
 static inline void SetModRmRmToReg              (X64Instruction* instruction, X64Operand operand);
-static inline void SetModRmSibDisp32            (X64Instruction* instruction);
+static inline void SetModRmSibDisp32Mod            (X64Instruction* instruction);
 static inline void SetModRmModField             (X64Instruction* instruction, uint8_t mod);
 static inline void SetModRmRegField             (X64Instruction* instruction, uint8_t bits);
 static inline void SetSibDisp32                 (X64Instruction* instruction, X64Operand operand);
@@ -316,8 +316,6 @@ static inline void SetOperand (X64Instruction* instruction,
 
         case BYTE_TARGET(MODRM_RM):
         {
-            assert(operand.type == X64OperandType::REG);
-
             instruction->requireModRM = true;
             
             SetModRmRmOperand(instruction, operand);
@@ -357,7 +355,7 @@ static inline void SetModRmRmOperand(X64Instruction* instruction, X64Operand ope
     {
         case X64OperandType::REG:
         {
-            SetModRmRmOperand(instruction, operand);    
+            SetModRmRmToReg(instruction, operand);    
             break;
         }
 
@@ -416,7 +414,6 @@ static inline void SetModRmDirectAddressingMod(X64Instruction* instruction)
 static inline void SetModRmRmToReg(X64Instruction* instruction, X64Operand operand)
 {
     SetModRmDirectAddressingMod(instruction);
-
     
 #define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT, ...)               \
     case X64Register::REG:                                      \
@@ -435,11 +432,14 @@ static inline void SetModRmRmToReg(X64Instruction* instruction, X64Operand opera
 #undef DEF_X64_REG
 }
 
-static inline void SetModRmSibDisp32(X64Instruction* instruction)
+static inline void SetModRmSibDisp32Mod(X64Instruction* instruction)
 {
     static const size_t sibDisp32Mod = 2; // 0b10
 
     SetModRmModField(instruction, sibDisp32Mod);
+
+    static const size_t sibDisp32RmBits = 4; // 0b100
+    SetModRmRmField(instruction, sibDisp32RmBits);
 }
 
 static inline void SetModRmModField(X64Instruction* instruction, uint8_t mod)
@@ -458,7 +458,7 @@ static inline void SetModRmRegField(X64Instruction* instruction, uint8_t bits)
 
 static inline void SetSibDisp32(X64Instruction* instruction, X64Operand operand)
 {
-    SetModRmSibDisp32(instruction);
+    SetModRmSibDisp32Mod(instruction);
 
     static const uint8_t baseDisp32Index = 4; // 0100
 
@@ -503,8 +503,10 @@ static inline void SetDisp32(X64Instruction* instruction, X64Operand operand)
 
 static inline void SetModRmRipAddressing(X64Instruction* instruction)
 {
-    static uint8_t rmRipAddressing = 5; // 0b101;
+    static uint8_t modRmRipAddressingMod = 0;
+    SetModRmModField(instruction, modRmRipAddressingMod);
 
+    static uint8_t rmRipAddressing = 5; // 0b101;
     SetModRmRmField(instruction, rmRipAddressing);
 }
 
