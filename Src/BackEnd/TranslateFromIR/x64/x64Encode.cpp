@@ -30,10 +30,10 @@ static inline void SetOperands(X64Instruction* instruction, size_t numberOfOpera
 static inline void SetOperand (X64Instruction* instruction, 
                                X64Operand operand1, X64OperandByteTarget operand1Target);
 
-static inline void SetRex (X64Instruction* instruction);
-static inline void SetRexB(X64Instruction* instruction, uint8_t bit);
-static inline void SetRexW(X64Instruction* instruction, uint8_t bit);
-static inline void SetRexR(X64Instruction* instruction, uint8_t bit);
+static inline void SetRexDefault (X64Instruction* instruction);
+static inline void SetRexB       (X64Instruction* instruction);
+static inline void SetRexW       (X64Instruction* instruction);
+static inline void SetRexR       (X64Instruction* instruction);
 
 static inline void SetRegInOpcode               (X64Instruction* instruction, X64Operand operand);
 static inline void SetModRmReg                  (X64Instruction* instruction, X64Operand operand);
@@ -123,7 +123,7 @@ X64Instruction X64InstructionCtor()
     SET_0(imm16);
 #undef SET_0
 
-    SetRex(&instruction);
+    SetRexDefault(&instruction);
     
     return instruction;
 }
@@ -281,7 +281,7 @@ static inline void SetRegInOpcode(X64Instruction* instruction, X64Operand operan
 #define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT)                    \
     case X64Register::REG:                                      \
         instruction->opcode |= (LOW_BITS << opcodeRegShift);    \
-        SetRexB(instruction, HIGH_BIT);                         \
+        if (HIGH_BIT) SetRexB(instruction);                     \
         break;
 
     switch (operand.value.reg)
@@ -305,8 +305,8 @@ static inline void SetOperand (X64Instruction* instruction,
         case BYTE_TARGET(MODRM_REG):
         {
             assert(operand.type == X64OperandType::REG);
-            assert(instruction->requireModRM);
 
+            instruction->requireModRM = true;
             SetModRmReg(instruction, operand);
 
             break;
@@ -315,8 +315,8 @@ static inline void SetOperand (X64Instruction* instruction,
         case BYTE_TARGET(MODRM_RM):
         {
             assert(operand.type == X64OperandType::REG);
-            assert(instruction->requireModRM);
 
+            instruction->requireModRM = true;
             SetModRmRmToReg(instruction, operand);
 
             break;
@@ -325,9 +325,10 @@ static inline void SetOperand (X64Instruction* instruction,
         case BYTE_TARGET(SIB):
         {
             assert(operand.type == X64OperandType::MEM);
-            assert(instruction->requireModRM);
-            assert(instruction->requireSIB);
-            assert(instruction->requireDisp32);
+
+            instruction->requireModRM  = true;
+            instruction->requireSIB    = true;
+            instruction->requireDisp32 = true;
 
             SetSibDisp32(instruction, operand);
 
@@ -337,8 +338,9 @@ static inline void SetOperand (X64Instruction* instruction,
         case BYTE_TARGET(MODRM_RIP_ADDR):
         {
             assert(operand.type == X64OperandType::MEM); //TODO: подумать
-            assert(instruction->requireModRM);
-            assert(instruction->requireDisp32);
+
+            instruction->requireDisp32 = true;
+            instruction->requireModRM  = true;
 
             SetRipAddressing(instruction, operand);
 
@@ -348,8 +350,8 @@ static inline void SetOperand (X64Instruction* instruction,
         case BYTE_TARGET(IMM32):
         {
             assert(operand.type == X64OperandType::IMM);
-            assert(instruction->requireImm32);
 
+            instruction->requireImm32 = true;
             SetImm32(instruction, operand);
 
             break;
@@ -358,8 +360,8 @@ static inline void SetOperand (X64Instruction* instruction,
         case BYTE_TARGET(IMM16):
         {
             assert(operand.type == X64OperandType::IMM);
-            assert(instruction->requireImm16);
-
+            
+            instruction->requireImm16 = true;
             SetImm16(instruction, operand);
 
             break;
@@ -376,7 +378,7 @@ static inline void SetModRmReg(X64Instruction* instruction, X64Operand operand)
 #define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT, ...)               \
     case X64Register::REG:                                      \
         SetModRmRegField(instruction, LOW_BITS);                \
-        SetRexR(instruction, HIGH_BIT);                         \
+        if (HIGH_BIT) SetRexR(instruction);                     \
         break;
     
     switch (operand.value.reg)
@@ -405,7 +407,7 @@ static inline void SetModRmRmToReg(X64Instruction* instruction, X64Operand opera
 #define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT, ...)               \
     case X64Register::REG:                                      \
         SetModRmRmField(instruction, LOW_BITS);                 \
-        SetRexB(instruction, HIGH_BIT);                         \
+        if (HIGH_BIT) SetRexB(instruction);                     \
         break;
 
     switch (operand.value.reg)
@@ -451,7 +453,7 @@ static inline void SetSibDisp32(X64Instruction* instruction, X64Operand operand)
 #define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT, ...)               \
     case X64Register::REG:                                      \
         SetSibBase(instruction, LOW_BITS);                      \
-        SetRexB(instruction, HIGH_BIT);                         \
+        if (HIGH_BIT) SetRexB(instruction);                     \
         break;
 
     switch (operand.value.reg)
@@ -518,30 +520,36 @@ static inline void SetImm16(X64Instruction* instruction, X64Operand operand)
 // TODO: копипаста. Ваще подумать что в функции можно передавать шифт как будто и избавиться от копипасты
 // но ваще как будто разница тем что я меняю одну строчку с | на вызов функции ваще никакая???
 
-static inline void SetRex (X64Instruction* instruction)
+static inline void SetRexDefault (X64Instruction* instruction)
 {
     instruction->rex = 0x40;
 }
 
-static inline void SetRexB(X64Instruction* instruction, uint8_t bit)
+static inline void SetRexB(X64Instruction* instruction)
 {
+    instruction->requireREX = true;
+
     static const size_t rexBFieldShift = 0;
 
-    instruction->rex |= (bit << rexBFieldShift);
+    instruction->rex |= (1 << rexBFieldShift);
 }
 
-static inline void SetRexW(X64Instruction* instruction, uint8_t bit)
+static inline void SetRexW(X64Instruction* instruction)
 {
+    instruction->requireREX = true;
+
     static const size_t rexWFieldShift = 3;
     
-    instruction->rex |= (bit << rexWFieldShift);
+    instruction->rex |= (1 << rexWFieldShift);
 }
 
-static inline void SetRexR(X64Instruction* instruction, uint8_t bit)
+static inline void SetRexR(X64Instruction* instruction)
 {
+    instruction->requireREX = true;
+    
     static const size_t rexRFieldShift = 2;
     
-    instruction->rex |= (bit << rexRFieldShift);
+    instruction->rex |= (1 << rexRFieldShift);
 }
 
 //-----------------------------------------------------------------------------
