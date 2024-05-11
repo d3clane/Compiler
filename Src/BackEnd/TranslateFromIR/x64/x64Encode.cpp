@@ -16,12 +16,6 @@ static const uint8_t OpcodePrefix1_0F   = 0x0F;
 static const uint8_t OpcodePrefix2_38   = 0x38;
 static const uint8_t OpcodePrefix2_3A   = 0x3A;
 
-static inline void SetRexRequirement(X64Instruction* instruction, 
-                                     size_t numberOfOperands,
-                                     X64Operand operand1, X64Operand operand2);
-
-static inline void SetRexRequirement(X64Instruction* instruction, X64Operand operand);
-
 static inline void SetOperands(X64Instruction* instruction, size_t numberOfOperands,
                                X64Operand operand1, X64Operand operand2,
                                X64OperandByteTarget operand1Target, 
@@ -65,8 +59,6 @@ void X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands,
                         X64OperandByteTarget operand1Target, 
                         X64OperandByteTarget operand2Target)
 {
-    SetRexRequirement(instruction, numberOfOperands, operand1, operand2);
-
     SetOperands(instruction, numberOfOperands, operand1, operand2, 
                 operand1Target, operand2Target);
 }
@@ -203,48 +195,6 @@ X64Register     ConvertIRToX64Register      (IRRegister reg)
 
     assert(false);
     return X64Register::NO_REG;
-}
-
-static inline void SetRexRequirement(X64Instruction* instruction, 
-                                     size_t numberOfOperands,
-                                     X64Operand operand1, X64Operand operand2)
-{
-    assert(instruction);
-
-    if (numberOfOperands == 0)
-        return;
-
-    if (instruction->requireREX)
-        return;
-
-    if (numberOfOperands > 0)
-        SetRexRequirement(instruction, operand1);
-    if (numberOfOperands > 1)
-        SetRexRequirement(instruction, operand2);
-}
-
-static inline void SetRexRequirement(X64Instruction* instruction, X64Operand operand)
-{
-    assert(instruction);
-
-    if (operand.value.reg == X64Register::NO_REG)
-        return;
-    
-#define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT, ...)       \
-    case X64Register::REG:                              \
-        if (HIGH_BIT) instruction->requireREX = true;   \
-        break;
-
-    switch (operand.value.reg)
-    {
-        #include "x64RegistersDefs.h"
-
-        default:    // Unreachable
-            assert(false);
-            break;
-    }     
-
-#undef DEF_X64_REG
 }
 
 static inline void SetOperands(X64Instruction* instruction, size_t numberOfOperands,
