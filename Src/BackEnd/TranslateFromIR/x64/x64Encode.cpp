@@ -1,5 +1,8 @@
 #include <assert.h>
+#include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "x64Encode.h"
 
@@ -10,7 +13,7 @@ static const uint8_t MandatoryPrefix_F2 = 0xF2;
 static const uint8_t MandatoryPrefix_F3 = 0xF3;
 
 static const uint8_t OpcodePrefix1_0F   = 0x0F;
-static const uint8_t OpcodePrefix2_38   = 0xF2;
+static const uint8_t OpcodePrefix2_38   = 0x38;
 static const uint8_t OpcodePrefix2_3A   = 0x3A;
 
 static inline void SetRexRequirement(X64Instruction* instruction, 
@@ -46,11 +49,32 @@ X64Instruction X64InstructionInit(X64Instruction* instruction, size_t numberOfOp
                 operand1Target, operand2Target);
 }
 
+X64Instruction X64InstructionInit(X64Operation operation, size_t numberOfOperands, 
+                                  X64Operand operand1, X64Operand operand2)
+{
+    X64Instruction instruction = X64InstructionCtor();
+
+#define DEF_X64_OP(OP, INSTRUCTION_INIT_CODE, ...)              \
+    case X64Operation::OP:                                      \
+        INSTRUCTION_INIT_CODE;                                  \
+        break;
+
+    switch (operation)
+    {
+        #include "x64Operations.h"
+
+        default:    // Unreachable
+            assert(false);
+            break;
+    }
+
+    return instruction;
+}
+
 X64Instruction X64InstructionCtor()
 {
     X64Instruction instruction = {};
 
-#define I instruction
 #define SET_0(FIELD) instruction. ##FIELD = 0;
     SET_0(requireMandatoryPrefix);
     SET_0(requireREX);
@@ -492,20 +516,63 @@ static inline void SetRexR(X64Instruction* instruction, uint8_t bit)
     X64InstructionInit(&instruction, numberOfOperands, operand1, operand2,  \
                        OPERAND1_TARGET, OPERAND2_TARGET)
 
-char* EncodeX64(X64Operation operation, size_t numberOfOperands, 
-                X64Operand operand1, X64Operand operand2)
+uint8_t* EncodeX64(X64Operation operation, size_t numberOfOperands, 
+                   X64Operand operand1, X64Operand operand2, 
+                   size_t* outInstructionLen)
 {
-    X64Instruction instruction = X64InstructionCtor();
-#define I instruction
+    X64Instruction instruction = X64InstructionInit(operation, numberOfOperands, 
+                                                    operand1, operand2);
 
-#define DEF_X64_OP(OP, INSTRUCTION_CTOR_CODE, ...)              \
-    case X64Operation::OP:                                      \
-        INSTRUCTION_CTOR_CODE;                                  \
-        break;
+    static const size_t maxInstructionLen = 16;
+    uint8_t* instructionBytes = (uint8_t*)calloc(maxInstructionLen, sizeof(*instructionBytes));
+
+    size_t instructionLen = 0;
+
+    if (instruction.requireMandatoryPrefix) 
+        instructionBytes[instructionLen++] = instruction.mandatoryPrefix;
+    if (instruction.requireREX)
+        instructionBytes[instructionLen++] = instruction.rex;
+    if (instruction.requireOpcodePrefix1)
+        instructionBytes[instructionLen++] = instruction.opcodePrefix1;
+    if (instruction.opcodePrefix2)
+        instructionBytes[instructionLen++] = instruction.opcodePrefix2;
+
+    instructionBytes[instructionLen++] = instruction.opcode;
+
+    if (instruction.requireModRM)
+        instructionBytes[instructionLen++] = instruction.modRM;
+    if (instruction.requireSIB)
+        instructionBytes[instructionLen++] = instruction.sib;
+    if (instruction.requireDisp32)
+    {
+        memcpy(instructionBytes + instructionLen, &instruction.disp32, sizeof(instruction.disp32));
+        instructionLen += sizeof(instruction.disp32);
+    }
+    if (instruction.requireImm16)
+    {
+        memcpy(instructionBytes + instructionLen, &instruction.imm16, sizeof(instruction.imm16));
+        instructionLen += sizeof(instruction.imm16);
+    }
+    if (instruction.requireImm32)
+    {
+        memcpy(instructionBytes + instructionLen, &instruction.imm32, sizeof(instruction.imm32));
+        instructionLen += sizeof(instruction.imm32);
+    }
     
+    assert(instructionLen <= maxInstructionLen);
 
-
+    *outInstructionLen = instructionLen;
+    return instructionBytes;
 }
 
-char* EncodeX64(X64Operation operation, X64Operand operand1, X64Operand operand2);
-char* EncodeX64(X64Operation operation, X64Operand operand);
+uint8_t* EncodeX64(X64Operation operation, X64Operand operand1, X64Operand operand2, 
+                   size_t* outInstructionLen)
+{
+    return EncodeX64(operation, 2, operand1, operand2, outInstructionLen);
+}
+
+uint8_t* EncodeX64(X64Operation operation, X64Operand operand, size_t* outInstructionLen)
+{
+    X64Operand emptyOperand = {};
+    return EncodeX64(operation, 1, operand, emptyOperand, outInstructionLen);
+}

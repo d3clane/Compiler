@@ -91,9 +91,13 @@ X64OperandValue ConvertIRToX64OperandValue  (IROperandValue value);
 X64OperandType  ConvertIRToX64OperandType   (IROperandType type);
 X64Register     ConvertIRToX64Register      (IRRegister reg);
 
-char* EncodeX64(X64Operation operation, size_t numberOfOperands, 
-                X64Operand operand1, X64Operand operand2);
-char* EncodeX64(X64Operation operation, X64Operand operand1, X64Operand operand2);
-char* EncodeX64(X64Operation operation, X64Operand operand);
+uint8_t* EncodeX64(X64Operation operation, size_t numberOfOperands, 
+                   X64Operand operand1, X64Operand operand2, 
+                   size_t* outInstructionLen);
+
+uint8_t* EncodeX64(X64Operation operation, X64Operand operand1, X64Operand operand2, 
+                   size_t* outInstructionLen);
+
+uint8_t* EncodeX64(X64Operation operation, X64Operand operand, size_t* outInstructionLen);
 
 #endif 

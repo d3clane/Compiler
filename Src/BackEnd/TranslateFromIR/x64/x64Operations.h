@@ -10,7 +10,7 @@
 
 DEF_X64_OP(NOP,
 {
-    I.opcode = 0x90;
+    instruction.opcode = 0x90;
     X64_INSTRUCTION_INIT(EMPTY_BYTE_TARGET, EMPTY_BYTE_TARGET);
 })
 
@@ -18,28 +18,18 @@ DEF_X64_OP(PUSH,
 {
     assert(numberOfOperands == 1 && operand1.type == X86OperandType::REG);
     
-    I.opcode = 0x50;
-    I.requireRegInOpcode = true;
+    instruction.opcode = 0x50;
 
-    X64_INSTRUCTION_INIT(EMPTY_BYTE_TARGET())
-    
-    instruction = 
-    {
-        .
-    }
-        X64_INSTRUCTION_CREATE(0x50, EMPTY_BYTE_TARGET, EMPTY_BYTE_TARGET, 
-        false, false, false, false, false, false, false, true, // Require reg in opcode
-        EMPTY_BYTE, EMPTY_BYTE, EMPTY_BYTE, EMPTY_BYTE);
+    X64_INSTRUCTION_INIT(BYTE_TARGET(OPCODE), EMPTY_BYTE_TARGET);
 })
 
 DEF_X64_OP(POP,
 {
     assert(numberOfOperands == 1 && operand1.type == X64OperandType::REG);
-    
-    instruction = 
-        X64_INSTRUCTION_CREATE(0x58, EMPTY_BYTE_TARGET, EMPTY_BYTE_TARGET, 
-        false, false, false, false, false, false, false, true, // Require reg in opcode
-        EMPTY_BYTE, EMPTY_BYTE, EMPTY_BYTE, EMPTY_BYTE);
+
+    instruction.opcode = 0x58;
+
+    X64_INSTRUCTION_INIT(BYTE_TARGET(OPCODE), EMPTY_BYTE_TARGET);
 })
 
 DEF_X64_OP(MOV,
@@ -47,48 +37,163 @@ DEF_X64_OP(MOV,
     assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
                                     operand2.type == X64OperandType::REG);
 
-    instruction = 
-        X64_INSTRUCTION_CREATE(0)
+    instruction.opcode = 0x8B;
+    SetRexW(&instruction);
+
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(ADD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG &&
+                                    operand2.type == X64OperandType::IMM);
+
+    instruction.opcode = 0x81;
+    SetRexW(&instruction);
+    SetModRmRegField(&instruction, 0);
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_RM), BYTE_TARGET(IMM32));
 })
 
 DEF_X64_OP(SUB,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG &&
+                                    operand2.type == X64OperandType::IMM);
+
+    instruction.opcode = 0x81;
+    SetRexW(&instruction);
+    SetModRmRegField(&instruction, 5);
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_RM), BYTE_TARGET(IMM32));
 })
 
+//TODO: Think about copypaste ADDSD, SUBSD, ...
 DEF_X64_OP(ADDSD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_F2;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0x58;
+
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(SUBSD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_F2;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0x5C;
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(MULSD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_F2;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0x59;
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(DIVSD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_F2;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0x5E;
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(PXOR,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_66;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0xEF;
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(ANDPD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_66;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0x54;
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(ORPD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_66;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0x56;
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(SQRTPD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_66;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0x51;
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 /*DEF_X64_OP(F_SIN,
@@ -117,6 +222,18 @@ DEF_X64_OP(MOVSD,
 
 DEF_X64_OP(COMISD,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::REG);
+                                    
+    instruction.requireMandatoryPrefix = true;
+    instruction.mandatoryPrefix        = MandatoryPrefix_66;
+
+    instruction.requireOpcodePrefix1   = true; 
+    instruction.opcodePrefix1          = OpcodePrefix1_0F;
+
+    instruction.opcode = 0xEF;
+    
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
 
 DEF_X64_OP(JMP,
