@@ -300,6 +300,7 @@ static inline void SetOperand (X64Instruction* instruction,
 {
     assert(instruction);
 
+
     switch (operandTarget)
     {
         case BYTE_TARGET(MODRM_REG):
@@ -317,32 +318,8 @@ static inline void SetOperand (X64Instruction* instruction,
             assert(operand.type == X64OperandType::REG);
 
             instruction->requireModRM = true;
-            SetModRmRmToReg(instruction, operand);
-
-            break;
-        }
-
-        case BYTE_TARGET(SIB):
-        {
-            assert(operand.type == X64OperandType::MEM);
-
-            instruction->requireModRM  = true;
-            instruction->requireSIB    = true;
-            instruction->requireDisp32 = true;
-
-            SetSibDisp32(instruction, operand);
-
-            break;
-        }
-        
-        case BYTE_TARGET(MODRM_RIP_ADDR):
-        {
-            assert(operand.type == X64OperandType::MEM); //TODO: подумать
-
-            instruction->requireDisp32 = true;
-            instruction->requireModRM  = true;
-
-            SetRipAddressing(instruction, operand);
+            
+            SetModRmRmOperand(instruction, operand);
 
             break;
         }
@@ -368,6 +345,42 @@ static inline void SetOperand (X64Instruction* instruction,
         }
 
         default: // Unreachable
+            assert(false);
+            break;
+    }
+}
+
+static inline void SetModRmRmOperand(X64Instruction* instruction, X64Operand operand)
+{
+    switch (operand.type)
+    {
+        case X64OperandType::REG:
+        {
+            SetModRmRmOperand(instruction, operand);    
+            break;
+        }
+
+        case X64OperandType::MEM:
+        {
+            if (operand.value.reg == X64Register::RIP)
+            {
+                instruction->requireDisp32 = true;
+
+                SetRipAddressing(instruction, operand);
+            }
+            else
+            {
+                instruction->requireSIB    = true;
+                instruction->requireDisp32 = true;
+
+                SetSibDisp32(instruction, operand);
+            }
+
+            break;
+        }
+
+        case X64OperandType::IMM: // Unreachable
+        default:
             assert(false);
             break;
     }

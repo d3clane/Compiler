@@ -71,10 +71,6 @@ enum class X64OperandByteTarget
     MODRM_REG,
     MODRM_RM,
 
-    MODRM_RIP_ADDR,
-
-    SIB,
-
     IMM32,
     IMM16,      ///< for RET instruction
 };
