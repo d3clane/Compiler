@@ -223,7 +223,7 @@ DEF_X64_OP(MOVSD,
 {
     assert(numberOfOperands == 2);
     assert((operand1.type == X64OperandType::MEM && operand2.type == X64OperandType::REG) ||
-           (operand1.type == X64OpernadType::REG && operand2.type == X64OperandType::MEM));
+           (operand1.type == X64OperandType::REG && operand2.type == X64OperandType::MEM));
 
     instruction.requireMandatoryPrefix = true;
     instruction.mandatoryPrefix        = MandatoryPrefix_F2;
@@ -231,10 +231,18 @@ DEF_X64_OP(MOVSD,
     instruction.requireOpcodePrefix1   = true; 
     instruction.opcodePrefix1          = OpcodePrefix1_0F;
 
-    if ()
-    instruction.opcode = 0x2F;
-    
-    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
+    if (operand1.type == X64OperandType::MEM && operand2.type == X64OperandType::REG)
+    {
+        instruction.opcode = 0x11;
+
+        X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_RM), BYTE_TARGET(MODRM_REG));    
+    }
+    else
+    {
+        instruction.opcode = 0x10;
+
+        X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
+    }
 })
 
 DEF_X64_OP(COMISD,
