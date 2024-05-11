@@ -6,6 +6,8 @@
 #include "TranslateFromIR/x64/x64Translate.h"
 #include "Common/Log.h"
 
+#include "TranslateFromIR/x64/x64Encode.h"
+
 int main(int argc, char* argv[])
 {
     assert(argc > 3);
@@ -26,5 +28,22 @@ int main(int argc, char* argv[])
 
     IR* ir = IRBuild(&tree, allNamesTable);
     IR_TEXT_DUMP(ir);
-    TranslateToX64(ir, outStream);
+    //TranslateToX64(ir, outStream);
+
+    X64Operation op = X64Operation::ADD;
+    X64Operand op1  = {};
+    op1.type = X64OperandType::REG;
+    op1.value.reg = X64Register::RAX;
+
+    X64Operand op2  = {};
+    op2.type = X64OperandType::IMM;
+    op2.value.imm = 10;
+
+    size_t outInstructionLen = 0;
+    uint8_t* instruction = EncodeX64(op, op1, op2, &outInstructionLen);
+
+    for (size_t i = 0; i < outInstructionLen; ++i)
+    {
+        printf("%x ", instruction[i]);
+    }
 }

@@ -16,7 +16,7 @@ DEF_X64_OP(NOP,
 
 DEF_X64_OP(PUSH,
 {
-    assert(numberOfOperands == 1 && operand1.type == X86OperandType::REG);
+    assert(numberOfOperands == 1 && operand1.type == X64OperandType::REG);
     
     instruction.opcode = 0x50;
 
@@ -38,7 +38,7 @@ DEF_X64_OP(MOV,
                                     operand2.type == X64OperandType::REG);
 
     instruction.opcode = 0x8B;
-    SetRexW(&instruction);
+    SetRexW(&instruction, 1);
 
     X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
@@ -49,7 +49,7 @@ DEF_X64_OP(ADD,
                                     operand2.type == X64OperandType::IMM);
 
     instruction.opcode = 0x81;
-    SetRexW(&instruction);
+    SetRexW(&instruction, 1);
     SetModRmRegField(&instruction, 0);
     
     X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_RM), BYTE_TARGET(IMM32));
@@ -61,7 +61,7 @@ DEF_X64_OP(SUB,
                                     operand2.type == X64OperandType::IMM);
 
     instruction.opcode = 0x81;
-    SetRexW(&instruction);
+    SetRexW(&instruction, 1);
     SetModRmRegField(&instruction, 5);
     
     X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_RM), BYTE_TARGET(IMM32));

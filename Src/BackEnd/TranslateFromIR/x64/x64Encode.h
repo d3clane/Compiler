@@ -79,10 +79,10 @@ enum class X64OperandByteTarget
     IMM16,      ///< for RET instruction
 };
 
-X64Instruction X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
-                                  X64Operand operand1, X64Operand operand2,
-                                  X64OperandByteTarget operand1Target, 
-                                  X64OperandByteTarget operand2Target);
+void X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
+                        X64Operand operand1, X64Operand operand2,
+                        X64OperandByteTarget operand1Target, 
+                        X64OperandByteTarget operand2Target);
 
 X64Instruction X64InstructionCtor();
 

@@ -59,7 +59,7 @@ BACK_END_CPP = main.cpp
 BACK_END_OBJ = $(BACK_END_CPP:%.cpp=$(OBJECTDIR)/%.o)
 
 BACK_END_TRANSLATE_X64_DIR 	= BackEnd/TranslateFromIR/x64
-BACK_END_TRANSLATE_X64_CPP	= x64Translate.cpp
+BACK_END_TRANSLATE_X64_CPP	= x64Translate.cpp x64Encode.cpp
 BACK_END_TRANSLATE_X64_OBJ	= $(BACK_END_TRANSLATE_X64_CPP:%.cpp=$(OBJECTDIR)/%.o)
 
 BACK_END_TRANSLATE_X64_RODATA_IMM_DIR 	= BackEnd/TranslateFromIR/x64/RodataInfo/RodataImmediates

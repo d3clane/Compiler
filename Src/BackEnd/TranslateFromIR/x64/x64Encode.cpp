@@ -30,18 +30,38 @@ static inline void SetOperands(X64Instruction* instruction, size_t numberOfOpera
 static inline void SetOperand (X64Instruction* instruction, 
                                X64Operand operand1, X64OperandByteTarget operand1Target);
 
-static inline void SetRex (X64Instruction* instruction); // Simply set rex to 0b01000000
+static inline void SetRex (X64Instruction* instruction);
 static inline void SetRexB(X64Instruction* instruction, uint8_t bit);
 static inline void SetRexW(X64Instruction* instruction, uint8_t bit);
 static inline void SetRexR(X64Instruction* instruction, uint8_t bit);
 
+static inline void SetRegInOpcode               (X64Instruction* instruction, X64Operand operand);
+static inline void SetModRmReg                  (X64Instruction* instruction, X64Operand operand);
+static inline void SetModRmRegDirectAddressing  (X64Instruction* instruction);
+static inline void SetModRmRmToReg              (X64Instruction* instruction, X64Operand operand);
+static inline void SetModRmSibDisp32            (X64Instruction* instruction);
+static inline void SetModRmModField             (X64Instruction* instruction, uint8_t mod);
+static inline void SetModRmRegField             (X64Instruction* instruction, uint8_t bits);
+static inline void SetSibDisp32                 (X64Instruction* instruction, X64Operand operand);
+static inline void SetSibIndex                  (X64Instruction* instruction, uint8_t index);
+static inline void SetSibBase                   (X64Instruction* instruction, uint8_t base);
+static inline void SetDisp32                    (X64Instruction* instruction, X64Operand operand);
+static inline void SetModRmRipAddressing        (X64Instruction* instruction);
+static inline void SetModRmRmField              (X64Instruction* instruction, uint8_t rmBits);
+static inline void SetRipAddressing             (X64Instruction* instruction, X64Operand operand);
+static inline void SetImm32                     (X64Instruction* instruction, X64Operand operand);
+static inline void SetImm16                     (X64Instruction* instruction, X64Operand operand);
+
+static X64Instruction X64InstructionInit(X64Operation operation, size_t numberOfOperands, 
+                                         X64Operand operand1, X64Operand operand2);
+
 #define EMPTY_BYTE_TARGET   X64OperandByteTarget::IMM32 // some default value
 #define BYTE_TARGET(TARGET) X64OperandByteTarget::TARGET
 
-X64Instruction X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
-                                  X64Operand operand1, X64Operand operand2,
-                                  X64OperandByteTarget operand1Target, 
-                                  X64OperandByteTarget operand2Target)
+void X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
+                        X64Operand operand1, X64Operand operand2,
+                        X64OperandByteTarget operand1Target, 
+                        X64OperandByteTarget operand2Target)
 {
     SetRexRequirement(instruction, numberOfOperands, operand1, operand2);
 
@@ -49,8 +69,13 @@ X64Instruction X64InstructionInit(X64Instruction* instruction, size_t numberOfOp
                 operand1Target, operand2Target);
 }
 
-X64Instruction X64InstructionInit(X64Operation operation, size_t numberOfOperands, 
-                                  X64Operand operand1, X64Operand operand2)
+
+#define X64_INSTRUCTION_INIT(OPERAND1_TARGET, OPERAND2_TARGET)              \
+    X64InstructionInit(&instruction, numberOfOperands, operand1, operand2,  \
+                       OPERAND1_TARGET, OPERAND2_TARGET)
+
+static X64Instruction X64InstructionInit(X64Operation operation, size_t numberOfOperands, 
+                                         X64Operand operand1, X64Operand operand2)
 {
     X64Instruction instruction = X64InstructionCtor();
 
@@ -67,7 +92,7 @@ X64Instruction X64InstructionInit(X64Operation operation, size_t numberOfOperand
             assert(false);
             break;
     }
-
+#undef DEF_X64_OP
     return instruction;
 }
 
@@ -75,7 +100,7 @@ X64Instruction X64InstructionCtor()
 {
     X64Instruction instruction = {};
 
-#define SET_0(FIELD) instruction. ##FIELD = 0;
+#define SET_0(FIELD) instruction.FIELD = 0;
     SET_0(requireMandatoryPrefix);
     SET_0(requireREX);
     SET_0(requireOpcodePrefix1);
@@ -267,6 +292,7 @@ static inline void SetRegInOpcode(X64Instruction* instruction, X64Operand operan
             assert(false);
             break;
     }
+#undef DEF_X64_REG
 }
 
 static inline void SetOperand (X64Instruction* instruction, 
@@ -361,6 +387,7 @@ static inline void SetModRmReg(X64Instruction* instruction, X64Operand operand)
             assert(false);
             break;
     }
+#undef DEF_X64_REG
 }
 
 static inline void SetModRmRegDirectAddressing(X64Instruction* instruction)
@@ -389,6 +416,7 @@ static inline void SetModRmRmToReg(X64Instruction* instruction, X64Operand opera
             assert(false);
             break;
     }
+#undef DEF_X64_REG
 }
 
 static inline void SetModRmSibDisp32(X64Instruction* instruction)
@@ -434,7 +462,7 @@ static inline void SetSibDisp32(X64Instruction* instruction, X64Operand operand)
             assert(false);
             break;
     }
-
+#undef DEF_X64_REG
     SetDisp32(instruction, operand);
 }
 
@@ -489,6 +517,12 @@ static inline void SetImm16(X64Instruction* instruction, X64Operand operand)
 
 // TODO: копипаста. Ваще подумать что в функции можно передавать шифт как будто и избавиться от копипасты
 // но ваще как будто разница тем что я меняю одну строчку с | на вызов функции ваще никакая???
+
+static inline void SetRex (X64Instruction* instruction)
+{
+    instruction->rex = 0x40;
+}
+
 static inline void SetRexB(X64Instruction* instruction, uint8_t bit)
 {
     static const size_t rexBFieldShift = 0;
@@ -511,10 +545,6 @@ static inline void SetRexR(X64Instruction* instruction, uint8_t bit)
 }
 
 //-----------------------------------------------------------------------------
-
-#define X64_INSTRUCTION_INIT(OPERAND1_TARGET, OPERAND2_TARGET)              \
-    X64InstructionInit(&instruction, numberOfOperands, operand1, operand2,  \
-                       OPERAND1_TARGET, OPERAND2_TARGET)
 
 uint8_t* EncodeX64(X64Operation operation, size_t numberOfOperands, 
                    X64Operand operand1, X64Operand operand2, 
