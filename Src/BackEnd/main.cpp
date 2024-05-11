@@ -30,19 +30,19 @@ int main(int argc, char* argv[])
     IR_TEXT_DUMP(ir);
     //TranslateToX64(ir, outStream);
 
-    X64Operation op = X64Operation::JMP;
+    X64Operation op = X64Operation::LEA;
     X64Operand op1  = {};
-    op1.type = X64OperandType::IMM;
-    op1.value.imm = 0x53e;
-    op1.value.reg = X64Register::XMM3;
+    op1.type = X64OperandType::REG;
+    op1.value.imm = 256;
+    op1.value.reg = X64Register::RAX;
 
     X64Operand op2  = {};
-    op2.type = X64OperandType::REG;
-    op2.value.imm = 0;
-    op2.value.reg = X64Register::XMM8;
+    op2.type = X64OperandType::MEM;
+    op2.value.imm = -1;
+    op2.value.reg = X64Register::RIP;
 
     size_t outInstructionLen = 0;
-    uint8_t* instruction = EncodeX64(op, op1, &outInstructionLen);
+    uint8_t* instruction = EncodeX64(op, op1, op2, &outInstructionLen);
 
     for (size_t i = 0; i < outInstructionLen; ++i)
     {
