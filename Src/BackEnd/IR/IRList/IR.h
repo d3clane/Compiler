@@ -38,7 +38,7 @@ static const size_t MaxCmdLenInBytes = 16;
 struct IRNode
 {
     IROperation operation;
-    char*       labelName; // TODO: подумать статический массив или динамический
+    char*       labelName;
 
     size_t    numberOfOperands;
     IROperand operand1;
@@ -48,7 +48,7 @@ struct IRNode
 
     bool needPatch;
 
-    size_t asmCmdAddressBegin;
+    size_t asmCmdBeginAddress;
     size_t asmCmdLen;
 
     IRNode* nextNode;
