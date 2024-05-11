@@ -38,7 +38,6 @@ DEF_X64_OP(MOV,
                                     operand2.type == X64OperandType::REG);
 
     instruction.opcode = 0x8B;
-    SetRexDefault(&instruction);
     SetRexW(&instruction);
 
     X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
@@ -50,7 +49,6 @@ DEF_X64_OP(ADD,
                                     operand2.type == X64OperandType::IMM);
 
     instruction.opcode = 0x81;
-    SetRexDefault(&instruction);
     SetRexW(&instruction);
     SetModRmRegField(&instruction, 0);
     
@@ -63,7 +61,6 @@ DEF_X64_OP(SUB,
                                     operand2.type == X64OperandType::IMM);
 
     instruction.opcode = 0x81;
-    SetRexDefault(&instruction);
     SetRexW(&instruction);
     SetModRmRegField(&instruction, 5);
     
@@ -263,40 +260,79 @@ DEF_X64_OP(COMISD,
 
 DEF_X64_OP(JMP,
 {
+    assert(numberOfOperands == 1 && operand1.type == X64OperandType::IMM);
+
+    instruction.opcode = 0xE9;
+
+    X64_INSTRUCTION_INIT(BYTE_TARGET(IMM32), EMPTY_BYTE_TARGET);
 })
+
+#define GEN_JCC(OPCODE)                                             \
+do                                                                  \
+{                                                                   \
+    instruction.requireOpcodePrefix1 = true;                        \
+    instruction.opcodePrefix1 = OpcodePrefix1_0F;                   \
+    instruction.opcode = OPCODE;                                    \
+    X64_INSTRUCTION_INIT(BYTE_TARGET(IMM32), EMPTY_BYTE_TARGET);    \
+} while (0)
 
 DEF_X64_OP(JE,
 {
+    GEN_JCC(0x84);
 })
 
 DEF_X64_OP(JNE,
 {
+    GEN_JCC(0x85);
 })
 
 DEF_X64_OP(JB,
 {
+    GEN_JCC(0x82);
 })
 
 DEF_X64_OP(JBE,
 {
+    GEN_JCC(0x86);
 })
 
 DEF_X64_OP(JA,
 {
+    GEN_JCC(0x87);
 })
 
 DEF_X64_OP(JAE,
 {
+    GEN_JCC(0x83);
 })
+
+#undef GEN_JCC
 
 DEF_X64_OP(CALL,
 {
+    assert(numberOfOperands == 1 && operand1.type == X64OperandType::IMM);
+
+    instruction.opcode = 0xE8;
+
+    X64_INSTRUCTION_INIT(BYTE_TARGET(IMM32), EMPTY_BYTE_TARGET);
 })
 
 DEF_X64_OP(RET,
 {
+    assert(numberOfOperands == 1 && operand1.type == X64OperandType::IMM);
+
+    instruction.opcode = 0xC2;
+
+    X64_INSTRUCTION_INIT(BYTE_TARGET(IMM16), EMPTY_BYTE_TARGET);
 })
 
 DEF_X64_OP(LEA,
 {
+    assert(numberOfOperands == 2 && operand1.type == X64OperandType::REG && 
+                                    operand2.type == X64OperandType::MEM);
+
+    instruction.opcode = 0x8D;
+    SetRexW(&instruction);
+
+    X64_INSTRUCTION_INIT(BYTE_TARGET(MODRM_REG), BYTE_TARGET(MODRM_RM));
 })
