@@ -48,9 +48,8 @@ struct IRNode
 
     bool needPatch;
 
-    size_t asmAddress;
+    size_t asmCmdAddressBegin;
     size_t asmCmdLen;
-    char   asmCmdBytes[MaxCmdLenInBytes];
 
     IRNode* nextNode;
     IRNode* prevNode;
