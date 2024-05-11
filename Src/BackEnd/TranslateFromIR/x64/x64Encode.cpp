@@ -30,14 +30,16 @@ static inline void SetOperands(X64Instruction* instruction, size_t numberOfOpera
 static inline void SetOperand (X64Instruction* instruction, 
                                X64Operand operand1, X64OperandByteTarget operand1Target);
 
+
 static inline void SetRexDefault (X64Instruction* instruction);
 static inline void SetRexB       (X64Instruction* instruction);
 static inline void SetRexW       (X64Instruction* instruction);
 static inline void SetRexR       (X64Instruction* instruction);
 
+static inline void SetModRmRmOperand            (X64Instruction* instruction, X64Operand operand);
 static inline void SetRegInOpcode               (X64Instruction* instruction, X64Operand operand);
 static inline void SetModRmReg                  (X64Instruction* instruction, X64Operand operand);
-static inline void SetModRmRegDirectAddressing  (X64Instruction* instruction);
+static inline void SetModRmDirectAddressingMod  (X64Instruction* instruction);
 static inline void SetModRmRmToReg              (X64Instruction* instruction, X64Operand operand);
 static inline void SetModRmSibDisp32            (X64Instruction* instruction);
 static inline void SetModRmModField             (X64Instruction* instruction, uint8_t mod);
@@ -300,7 +302,6 @@ static inline void SetOperand (X64Instruction* instruction,
 {
     assert(instruction);
 
-
     switch (operandTarget)
     {
         case BYTE_TARGET(MODRM_REG):
@@ -405,7 +406,7 @@ static inline void SetModRmReg(X64Instruction* instruction, X64Operand operand)
 #undef DEF_X64_REG
 }
 
-static inline void SetModRmRegDirectAddressing(X64Instruction* instruction)
+static inline void SetModRmDirectAddressingMod(X64Instruction* instruction)
 {
     static const uint8_t regDirectAddressingMod = 3; // 0b11
 
@@ -414,7 +415,7 @@ static inline void SetModRmRegDirectAddressing(X64Instruction* instruction)
 
 static inline void SetModRmRmToReg(X64Instruction* instruction, X64Operand operand)
 {
-    SetModRmRegDirectAddressing(instruction);
+    SetModRmDirectAddressingMod(instruction);
 
     
 #define DEF_X64_REG(REG, LOW_BITS, HIGH_BIT, ...)               \
