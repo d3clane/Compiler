@@ -16,6 +16,9 @@ DEF_IR_OP(NOP,
     {
         PRINT_OPERATION(NOP);
     }
+},
+{
+    
 })
 
 DEF_IR_OP(PUSH,

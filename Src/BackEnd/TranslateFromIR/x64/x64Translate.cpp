@@ -43,7 +43,6 @@ struct RodataInfo
 static inline RodataInfo RodataInfoCtor();
 static inline void       RodataInfoDtor(RodataInfo* info);
 
-
 static inline void PrintRodata          (FILE* outStream, const RodataInfo* info);
 static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* rodataImmediates);
 static inline void PrintRodataStrings   (FILE* outStream, RodataStringsType*    rodataStrings);
@@ -61,7 +60,7 @@ static inline void PrintEntry   (FILE* outStream);
 
 //-----------------------------------------------------------------------------
 
-void TranslateToX64(const IR* ir, FILE* outStream)
+void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
 {
     assert(ir);
 
@@ -78,6 +77,10 @@ void TranslateToX64(const IR* ir, FILE* outStream)
         X86_ASM_CODE;                                   \
         break;                                          \
     }
+
+    static const size_t maxBytecodeLen = 10000;
+    uint8_t* bytecode  = (uint8_t*)calloc(maxBytecodeLen, sizeof(*bytecode));
+    size_t bytecodePos = 0;
 
     do
     {
