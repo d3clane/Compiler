@@ -11,9 +11,9 @@ StdIn:  push rbp
 
         pxor xmm0, xmm0                 ; result
         pxor xmm1, xmm1                 ; tmp storage for read value
-        movsd xmm2, [rel XMM_VAL_10]    ; multiplier1
-        movsd xmm3, [rel XMM_VAL_1]     ; multiplier2
-        movsd xmm4, [rel XMM_VAL_1]     ; divider
+        movsd xmm2, [XMM_VAL_10]    ; multiplier1
+        movsd xmm3, [XMM_VAL_1]     ; multiplier2
+        movsd xmm4, [XMM_VAL_1]     ; divider
 
         xor rcx, rcx                    ; isNegative
         mov rdx, 1                      ; isFirstChar
@@ -54,8 +54,8 @@ STDIN_READ_WHILE:
 NOT_NEG:
         cmp BYTE [rbp - 0x10], '.'
         jne CHECK_IS_NUM
-        movsd xmm2, [rel XMM_VAL_1]
-        movsd xmm4, [rel XMM_VAL_10]
+        movsd xmm2, [XMM_VAL_1]
+        movsd xmm4, [XMM_VAL_10]
         jmp AFTER_IF_ELSE
 
 
@@ -81,7 +81,7 @@ AFTER_IF_ELSE:
 STDIN_RET:
         cmp rcx, 1
         jne NOT_NEG_RET
-        movsd xmm1, [rel XMM_MAKE_NEGATIVE]
+        movsd xmm1, [XMM_MAKE_NEGATIVE]
         pxor xmm0, xmm1
 
 NOT_NEG_RET:
@@ -111,7 +111,7 @@ StdStrOut:
 
         pop rax
         add rsp, 0x10
-
+        
         mov rsp, rbp
         pop rbp
         ret 1
@@ -150,7 +150,7 @@ StdFOut:
         syscall 
         pop rax
 
-        movsd xmm1, [rel XMM_MAKE_NEGATIVE] ;
+        movsd xmm1, [XMM_MAKE_NEGATIVE] ;
         pxor xmm0, xmm1                     ; xmm0 := -xmm0
 
 PRINT_VALUE:
@@ -168,7 +168,7 @@ PRINT_VALUE:
         cvttsd2si rax, xmm0
         mov rdx, 1000
         mul rdx
-        mulsd xmm0, [rel XMM_VAL_1000]
+        mulsd xmm0, [XMM_VAL_1000]
         cvttsd2si rdi, xmm0
         sub rdi, rax
 
@@ -177,6 +177,15 @@ PRINT_VALUE:
         neg rdi
 PRINT_AFTER_POINT:        
         call PrintThreeCharsInt
+
+        mov rax, 1
+        mov rdi, 1
+        push 10 ; '\n'
+        mov rsi, rsp
+        mov rdx, 1
+        sub rsp, 0x8
+        syscall 
+        add rsp, 0x10
 
         mov rsp, rbp
         pop rbp
@@ -326,4 +335,3 @@ XMM_MAKE_NEGATIVE:
         dd -2147483648
         dd 0
         dd 0
-
