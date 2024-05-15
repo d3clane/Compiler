@@ -213,7 +213,7 @@ static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* 
     union 
     {
         double value;
-        int    bytes[2];
+        int    dwords[2];
     } doubleBytes;
 
     for (size_t i = 0; i < rodataImmediates->size; ++i)
@@ -226,7 +226,7 @@ static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* 
         fprintf(outStream, "%s:\n"
                            "\tdd %d\n"
                            "\tdd %d\n\n",
-                           immLabel, doubleBytes.bytes[0], doubleBytes.bytes[1]);
+                           immLabel, doubleBytes.dwords[0], doubleBytes.dwords[1]);
     }
 }
 

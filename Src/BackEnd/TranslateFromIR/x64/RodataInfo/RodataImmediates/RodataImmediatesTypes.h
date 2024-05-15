@@ -7,11 +7,14 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdint.h>
 
 struct RodataImmediatesValue
 {
     long long imm;
     char*     label;
+
+    uint64_t  asmAddr;
 };
 
 /// @brief Chosen RODATA_IMMEDIATES_POISON value for stack

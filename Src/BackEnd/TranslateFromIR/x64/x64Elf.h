@@ -3,6 +3,9 @@
 
 #include <stddef.h>
 
+#include "RodataInfo/Rodata.h"
+#include "CodeArray/CodeArray.h"
+
 enum class StdLibAddresses
 {
     ENTRY        = 0x401000,
@@ -32,7 +35,9 @@ enum class SegmentFilePos
     RODATA       = 0x3000,
 };
 
-static const size_t StdLibFileSize = 748;
+static const char*  StdLibFileName = "StdLib57.elf";
 
+void LoadCode   (CodeArrayType* code, FILE* outBinary);
+void LoadRodata (RodataInfo* rodata,  FILE* outBinary);
 
 #endif
