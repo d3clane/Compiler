@@ -3,8 +3,7 @@
 #include <string.h>
 
 #include "x64Translate.h"
-#include "RodataInfo/RodataImmediates/RodataImmediates.h"
-#include "RodataInfo/RodataStrings/RodataStrings.h"
+#include "RodataInfo/Rodata.h"
 
 //-----------------------------------------------------------------------------
 
@@ -33,15 +32,6 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand);
 #define PRINT_FORMAT_STR(...)        fprintf(outStream, __VA_ARGS__)
 
 //-----------------------------------------------------------------------------
-
-struct RodataInfo
-{
-    RodataImmediatesType* rodataImmediates;
-    RodataStringsType*    rodataStrings;
-};
-
-static inline RodataInfo RodataInfoCtor();
-static inline void       RodataInfoDtor(RodataInfo* info);
 
 static inline void PrintRodata          (FILE* outStream, const RodataInfo* info);
 static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* rodataImmediates);
@@ -202,26 +192,6 @@ static inline void PrintEntry(FILE* outStream)
 }
 
 //-----------------------------------------------------------------------------
-
-static inline RodataInfo RodataInfoCtor()
-{
-    RodataInfo info = {};
-    RodataImmediatesCtor(&info.rodataImmediates);
-    RodataStringsCtor   (&info.rodataStrings);
-
-    return info;
-}
-
-static inline void       RodataInfoDtor(RodataInfo* info)
-{
-    assert(info);
-
-    RodataImmediatesDtor(info->rodataImmediates);
-    RodataStringsDtor   (info->rodataStrings);
-
-    info->rodataImmediates = nullptr;
-    info->rodataStrings    = nullptr;
-}
 
 static inline void PrintRodata(FILE* outStream, const RodataInfo* info)
 {
