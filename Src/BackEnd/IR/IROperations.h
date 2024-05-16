@@ -266,9 +266,6 @@ DEF_IR_OP(STR_OUT,
                               X64OperandRegCreate(X64Register::RAX),
                               X64OperandMemCreate(X64Register::NO_REG, strInRodata->asmAddr));
 
-    //fprintf(stderr, "STRING - %s, ADR - %x\n", strInRodata->string, strInRodata->asmAddr);
-    //fprintf(stderr, "Cmd end addr - %x\n", node->asmCmdEndAddress);
-
     PrintOperationInCodeArray(code, X64Operation::PUSH,
                               X64OperandRegCreate(X64Register::RAX));
 
