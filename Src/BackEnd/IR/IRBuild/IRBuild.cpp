@@ -533,7 +533,8 @@ static inline void BuildFuncQuit(CompilerInfoState* info)
 
     IR_PUSH(IRNodeCreate(OP(POP), IROperandRegCreate(IR_REG(RBP))));
 
-    IR_PUSH(IRNodeCreate(OP(RET), IROperandImmCreate((long long)info->numberOfFuncParams)));    
+    IR_PUSH(IRNodeCreate(OP(RET), IROperandImmCreate(
+            (long long)info->numberOfFuncParams * XMM_REG_BYTE_SIZE / RXX_REG_BYTE_SIZE)));    
 }
 
 static void BuildComparison(const TreeNode* node, CompilerInfoState* info)
