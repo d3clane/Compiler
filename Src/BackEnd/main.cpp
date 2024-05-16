@@ -47,11 +47,24 @@ int main(int argc, char* argv[])
 
     RodataInfo rodata = RodataInfoCtor();
     
-    Rodata
+    RodataStringsValue value = {};
+    RodataStringsValueCtor(&value, "enter value: ", "STR_1");
+    RodataStringsPush(rodata.rodataStrings, value);
     LoadRodata(&rodata, outBinStream);
 
-    CodeArrayPush(code, 0xE8); CodeArrayPush()
-    tmp.value = (int)StdLibAddresses::HLT - (int)SegmentAddress::PROGRAM_CODE - 5;
+    int addr = (int)SegmentAddress::PROGRAM_CODE;
+    tmp.value = rodata.rodataStrings->data[0].asmAddr;
+    fprintf(stderr, "TMP VALUE - %d\n", tmp.value);
+
+    CodeArrayPush(code, 0x48); CodeArrayPush(code, 0x8d); CodeArrayPush(code, 0x04); CodeArrayPush(code, 0x25); 
+    CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
+    CodeArrayPush(code, 0x50);
+    addr += 9;
+    addr += 5;
+    tmp.value = (int)StdLibAddresses::OUT_STRING - addr;
+    CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
+    addr += 5;
+    tmp.value = (int)StdLibAddresses::HLT - addr;
     CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
 
     LoadCode(code, outBinStream);

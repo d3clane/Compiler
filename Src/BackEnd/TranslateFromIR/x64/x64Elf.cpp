@@ -240,7 +240,6 @@ static void LoadStdLibRodata(FILE* outBinary, uint64_t* asmAddr)
     assert(rodataPheader->p_vaddr == (Elf64_Addr)SegmentAddress::RODATA);
 
     // Print code
-    fseek(outBinary, (long)SegmentFilePos::STDLIB_CODE, SEEK_SET);
     fwrite(text + rodataPheader->p_offset, rodataPheader->p_filesz, 1, outBinary);
     *asmAddr += rodataPheader->p_filesz;
 
