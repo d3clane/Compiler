@@ -49,7 +49,7 @@ struct IRNode
     bool needPatch;
 
     size_t asmCmdBeginAddress;
-    size_t asmCmdLen;
+    size_t asmCmdEndAddress;
 
     IRNode* nextNode;
     IRNode* prevNode;

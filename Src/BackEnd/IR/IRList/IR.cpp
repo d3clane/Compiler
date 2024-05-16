@@ -145,7 +145,7 @@ IRNode* IRNodeCtor()
     node->operation = IROperation::NOP;
 
     node->asmCmdBeginAddress = 0;
-    node->asmCmdLen          = 0;
+    node->asmCmdEndAddress   = 0;
     
     node->jumpTarget = nullptr;
     node->needPatch  = false;

@@ -86,10 +86,12 @@ IR* IRBuild(const Tree* tree, const NameTableType* allNamesTable)
     info.labelTable = nullptr;
     
     LabelTableCtor(&info.labelTable);
-    
-    Build(tree->root, &info);
-
+        
+    IRPushBack(ir, IRNodeCreate("_start"));
+    IRPushBack(ir, IRNodeCreate(OP(CALL), IROperandLabelCreate("main"), true));
     IRPushBack(ir, IRNodeCreate(OP(HLT)));
+
+    Build(tree->root, &info);
 
     PatchJumps(ir, info.labelTable);
 

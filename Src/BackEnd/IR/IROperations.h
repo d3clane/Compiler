@@ -3,7 +3,7 @@
 #endif
 
 // DEF_IR_OP(OP_NAME, ...)
-// PRINT_LABEL(LABEL) - prints label to outStream x86 asm
+// PRINT_LABEL(LABEL) - prints label to outStream x64 asm
 // Vars : IRNode*
 
 DEF_IR_OP(NOP,
@@ -113,30 +113,54 @@ DEF_IR_OP(F_COT,
 
 DEF_IR_OP(F_PUSH,
 {
-    PRINT_STR_WITH_SHIFT("SUB RSP, 0x10\n");
-    PRINT_STR_WITH_SHIFT("MOVSD [RSP], ");
+    PRINT_FORMAT_STR("\tSUB RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
+    PRINT_FORMAT_STR("\tMOVSD [RSP], ");
     PRINT_OPERAND(node->operand1);
-    PRINT_STR("\n");
+    PRINT_FORMAT_STR("\n");
+
+    PrintOperationInCodeArray(code, X64Operation::SUB, 
+                              X64OperandRegCreate(X64Register::RSP),
+                              X64OperandImmCreate((int)XMM_REG_BYTE_SIZE));
+
+    PrintOperationInCodeArray(code, X64Operation::MOVSD,
+                              X64OperandMemCreate(X64Register::RSP, 0),
+                              ConvertIRToX64Operand(node->operand1));
 })
 
 DEF_IR_OP(F_POP,
 {
-    PRINT_STR_WITH_SHIFT("MOVSD ");
-    PRINT_OPERAND(node->operand1); PRINT_STR(", [RSP]\n");
-    PRINT_STR_WITH_SHIFT("ADD RSP, 0x10\n");
+    PRINT_FORMAT_STR("\tMOVSD ");
+    PRINT_OPERAND(node->operand1); PRINT_FORMAT_STR(", [RSP]\n");
+    PRINT_FORMAT_STR("\tADD RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
+
+    PrintOperationInCodeArray(code, X64Operation::MOVSD,
+                              ConvertIRToX64Operand(node->operand1),
+                              X64OperandMemCreate(X64Register::RSP, 0));
+
+    PrintOperationInCodeArray(code, X64Operation::ADD, 
+                              X64OperandRegCreate(X64Register::RSP),
+                              X64OperandImmCreate((int)XMM_REG_BYTE_SIZE));
 })
 
 DEF_IR_OP(F_MOV,
 {
     if (node->operand2.type == IROperandType::IMM)
     {
-        PRINT_STR_WITH_SHIFT("MOVSD ");
+        PRINT_FORMAT_STR("\tMOVSD ");
         PRINT_OPERAND(node->operand1);
 
         long long imm = node->operand2.value.imm;
-        const char* immLabel = GET_IMM_LABEL(imm);
 
-        PRINT_FORMAT_STR(", [rel %s]\n", immLabel);
+        RodataImmediatesValue* immInRodata = GET_IMM_ADDR_IN_RODATA(imm);
+
+        PRINT_FORMAT_STR(", [%s]\n", immInRodata->label);
+
+        PrintOperationInCodeArray(code, X64Operation::MOVSD, 
+                                  ConvertIRToX64Operand(node->operand1),
+                                  X64OperandMemCreate(
+                                  X64Register::RIP, 
+                                  immInRodata->asmAddr - node->asmCmdEndAddress));
+
     }
     else
         PRINT_OPERATION(MOVSD);
@@ -149,41 +173,49 @@ DEF_IR_OP(F_CMP,
 
 DEF_IR_OP(JMP,
 {
+    SetLabelRelativeShift(node);
     PRINT_OPERATION(JMP);
 })
 
 DEF_IR_OP(JE,
 {
+    SetLabelRelativeShift(node);
     PRINT_OPERATION(JE);
 })
 
 DEF_IR_OP(JNE,
 {
+    SetLabelRelativeShift(node);
     PRINT_OPERATION(JNE);
 })
 
 DEF_IR_OP(JL,
 {
+    SetLabelRelativeShift(node);
     PRINT_OPERATION(JB);
 })
 
 DEF_IR_OP(JLE,
 {
+    SetLabelRelativeShift(node);
     PRINT_OPERATION(JBE);
 })
 
 DEF_IR_OP(JG,
 {
+    SetLabelRelativeShift(node);
     PRINT_OPERATION(JA);
 })
 
 DEF_IR_OP(JGE,
 {
+    SetLabelRelativeShift(node);
     PRINT_OPERATION(JAE);
 })
 
 DEF_IR_OP(CALL,
 {
+    SetLabelRelativeShift(node);
     PRINT_OPERATION(CALL);
 })
 
@@ -194,29 +226,63 @@ DEF_IR_OP(RET,
 
 DEF_IR_OP(F_OUT,
 {
-    PRINT_STR_WITH_SHIFT("SUB RSP, 0x10\n");
-    PRINT_STR_WITH_SHIFT("MOVSD [RSP], ");
+    PRINT_FORMAT_STR("\tSUB RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
+    PRINT_FORMAT_STR("\tMOVSD [RSP], ");
     PRINT_OPERAND(node->operand1);
-    PRINT_STR("\n");
-    PRINT_STR_WITH_SHIFT("CALL StdFOut\n");
+    PRINT_FORMAT_STR("\n");
+    PRINT_FORMAT_STR("\tCALL StdFOut\n");
+    
+    PrintOperationInCodeArray(code, X64Operation::SUB, 
+                              X64OperandRegCreate(X64Register::RSP),
+                              X64OperandImmCreate((int)XMM_REG_BYTE_SIZE));
+
+    PrintOperationInCodeArray(code, X64Operation::MOVSD,
+                              X64OperandMemCreate(X64Register::RSP, 0),
+                              ConvertIRToX64Operand(node->operand1));
+
+    PrintOperationInCodeArray(code, X64Operation::CALL,
+                              X64OperandImmCreate(
+                              (int)StdLibAddresses::OUT_FLOAT - node->asmCmdEndAddress));
 })
 
 DEF_IR_OP(F_IN,
 {
-    PRINT_STR_WITH_SHIFT("CALL StdIn\n");
+    PRINT_FORMAT_STR("\tCALL StdIn\n");
+
+    PrintOperationInCodeArray(code, X64Operation::CALL,
+                              X64OperandImmCreate(
+                              (int)StdLibAddresses::IN_FLOAT - node->asmCmdEndAddress));
 })
 
 DEF_IR_OP(STR_OUT,
 {
     const char* string = node->operand1.value.string;
-    const char* stringLabel  = GET_STR_LABEL(string);
 
-    PRINT_FORMAT_STR    ("\tLEA RAX, [rel %s]\n", stringLabel);
-    PRINT_STR_WITH_SHIFT("PUSH RAX\n");
-    PRINT_STR_WITH_SHIFT("CALL StdStrOut\n");
+    RodataStringsValue* strInRodata  = GET_STR_ADDR_IN_RODATA(string);
+
+    PRINT_FORMAT_STR("\tLEA RAX, [%s]\n", strInRodata->label);
+    PRINT_FORMAT_STR("\tPUSH RAX\n");
+    PRINT_FORMAT_STR("\tCALL StdStrOut\n");
+
+    PrintOperationInCodeArray(code, X64Operation::LEA, 
+                              X64OperandRegCreate(X64Register::RAX),
+                              X64OperandMemCreate(
+                              X64Register::RIP, 
+                              strInRodata->asmAddr - node->asmCmdEndAddress));
+
+    PrintOperationInCodeArray(code, X64Operation::PUSH,
+                              X64OperandRegCreate(X64Register::RAX));
+
+    PrintOperationInCodeArray(code, X64Operation::CALL,
+                              X64OperandImmCreate(
+                              (int)StdLibAddresses::OUT_STRING - node->asmCmdEndAddress));
 })
 
 DEF_IR_OP(HLT,
 {
-    PRINT_STR_WITH_SHIFT("CALL StdHlt\n");
+    PRINT_FORMAT_STR("\tCALL StdHlt\n");
+
+    PrintOperationInCodeArray(code, X64Operation::CALL,
+                              X64OperandImmCreate(
+                              (int)StdLibAddresses::HLT - node->asmCmdEndAddress));
 })

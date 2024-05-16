@@ -38,7 +38,7 @@ static inline void SetModRmRmToReg              (X64Instruction* instruction, X6
 static inline void SetModRmSibDisp32Mod            (X64Instruction* instruction);
 static inline void SetModRmModField             (X64Instruction* instruction, uint8_t mod);
 static inline void SetModRmRegField             (X64Instruction* instruction, uint8_t bits);
-static inline void SetSibDisp32                 (X64Instruction* instruction, X64Operand operand);
+static inline void SetSibBaseAndDisp32                 (X64Instruction* instruction, X64Operand operand);
 static inline void SetSibIndex                  (X64Instruction* instruction, uint8_t index);
 static inline void SetSibBase                   (X64Instruction* instruction, uint8_t base);
 static inline void SetDisp32                    (X64Instruction* instruction, X64Operand operand);
@@ -120,6 +120,52 @@ X64Instruction X64InstructionCtor()
     SetRexDefault(&instruction);
     
     return instruction;
+}
+
+X64Operand X64OperandRegCreate(X64Register reg)
+{
+    X64Operand operand = 
+    {
+        .value = 
+        {
+            .reg = reg,
+        },
+
+        .type = X64OperandType::REG,
+    };
+
+    return operand;
+}
+
+X64Operand X64OperandImmCreate(int imm)
+{
+    X64Operand operand = 
+    {
+        .value = 
+        {
+            .imm = imm,
+        },
+
+        .type = X64OperandType::IMM,
+    };
+
+    return operand;
+}
+
+X64Operand X64OperandMemCreate(X64Register reg, int imm)
+{
+    X64Operand operand = 
+    {
+        .value = 
+        {
+            .reg = reg,
+            .imm = imm,
+        },
+
+        .type = X64OperandType::MEM,
+    };
+
+    return operand;
 }
 
 
@@ -319,10 +365,12 @@ static inline void SetModRmRmOperand(X64Instruction* instruction, X64Operand ope
             }
             else
             {
+                assert(operand.value.reg != X64Register::NO_REG);
+                
                 instruction->requireSIB    = true;
                 instruction->requireDisp32 = true;
 
-                SetSibDisp32(instruction, operand);
+                SetSibBaseAndDisp32(instruction, operand);
             }
 
             break;
@@ -406,7 +454,7 @@ static inline void SetModRmRegField(X64Instruction* instruction, uint8_t bits)
     instruction->modRM |= (bits << regFieldShift);
 }
 
-static inline void SetSibDisp32(X64Instruction* instruction, X64Operand operand)
+static inline void SetSibBaseAndDisp32(X64Instruction* instruction, X64Operand operand)
 {
     SetModRmSibDisp32Mod(instruction);
 

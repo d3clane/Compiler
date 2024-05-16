@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
     IR* ir = IRBuild(&tree, allNamesTable);
     IR_TEXT_DUMP(ir);
-    //TranslateToX64(ir, outStream);
+    TranslateToX64(ir, outStream, outBinStream);
 
 /*
     CodeArrayType* code = nullptr;

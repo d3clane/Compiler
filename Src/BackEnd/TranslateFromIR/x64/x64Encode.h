@@ -82,6 +82,10 @@ void X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands,
 
 X64Instruction X64InstructionCtor();
 
+X64Operand X64OperandRegCreate(X64Register reg);
+X64Operand X64OperandImmCreate(int imm);
+X64Operand X64OperandMemCreate(X64Register reg, int imm);
+
 X64Operand      ConvertIRToX64Operand       (IROperand irOperand);
 X64OperandValue ConvertIRToX64OperandValue  (IROperandValue value);
 X64OperandType  ConvertIRToX64OperandType   (IROperandType type);
