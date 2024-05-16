@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
     IR_TEXT_DUMP(ir);
     //TranslateToX64(ir, outStream);
 
+/*
     CodeArrayType* code = nullptr;
     CodeArrayCtor(&code, 0);
 
@@ -63,6 +64,22 @@ int main(int argc, char* argv[])
     addr += 5;
     tmp.value = (int)StdLibAddresses::OUT_STRING - addr;
     CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
+
+    addr += 5;
+    tmp.value = (int)StdLibAddresses::IN_FLOAT - addr;
+    CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
+
+    CodeArrayPush(code, 0x48), CodeArrayPush(code, 0x83),CodeArrayPush(code, 0xec), CodeArrayPush(code, 0x10);
+    CodeArrayPush(code, 0xf2), CodeArrayPush(code, 0x0f),CodeArrayPush(code, 0x11), CodeArrayPush(code, 0x04), CodeArrayPush(code, 0x24);
+    
+    addr += 9;
+    addr += 5;
+    tmp.value = (int)StdLibAddresses::OUT_FLOAT - addr;
+    CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
+
+    CodeArrayPush(code, 0x48), CodeArrayPush(code, 0x83),CodeArrayPush(code, 0xc4), CodeArrayPush(code, 0x10);
+    addr += 4;
+
     addr += 5;
     tmp.value = (int)StdLibAddresses::HLT - addr;
     CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
@@ -71,6 +88,7 @@ int main(int argc, char* argv[])
 
     RodataInfoDtor(&rodata);
 
+*/
     /*
     X64Operation op = X64Operation::LEA;
     X64Operand op1  = {};
