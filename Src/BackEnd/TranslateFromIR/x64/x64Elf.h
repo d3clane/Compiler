@@ -30,9 +30,9 @@ enum class SegmentAddress
 enum class SegmentFilePos
 {
     STDLIB_CODE  = 0x1000,
-    PROGRAM_CODE = 0x2000,
-
-    RODATA       = 0x3000,
+    RODATA       = 0x2000,
+    
+    PROGRAM_CODE = 0x3000,
 };
 
 static const char*  StdLibCodeName = "StdLib57.elf";

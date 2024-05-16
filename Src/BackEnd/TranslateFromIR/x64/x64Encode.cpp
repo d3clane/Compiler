@@ -35,16 +35,17 @@ static inline void SetRegInOpcode               (X64Instruction* instruction, X6
 static inline void SetModRmReg                  (X64Instruction* instruction, X64Operand operand);
 static inline void SetModRmDirectAddressingMod  (X64Instruction* instruction);
 static inline void SetModRmRmToReg              (X64Instruction* instruction, X64Operand operand);
-static inline void SetModRmSibDisp32Mod            (X64Instruction* instruction);
+static inline void SetModRmSibDisp32Mod         (X64Instruction* instruction);
 static inline void SetModRmModField             (X64Instruction* instruction, uint8_t mod);
 static inline void SetModRmRegField             (X64Instruction* instruction, uint8_t bits);
-static inline void SetSibBaseAndDisp32                 (X64Instruction* instruction, X64Operand operand);
+static inline void SetSibBaseAndDisp32          (X64Instruction* instruction, X64Operand operand);
 static inline void SetSibIndex                  (X64Instruction* instruction, uint8_t index);
 static inline void SetSibBase                   (X64Instruction* instruction, uint8_t base);
 static inline void SetDisp32                    (X64Instruction* instruction, X64Operand operand);
 static inline void SetModRmRipAddressing        (X64Instruction* instruction);
 static inline void SetModRmRmField              (X64Instruction* instruction, uint8_t rmBits);
 static inline void SetRipAddressing             (X64Instruction* instruction, X64Operand operand);
+static inline void SetAbsoluteAddressing        (X64Instruction* instruction, X64Operand operand);
 static inline void SetImm32                     (X64Instruction* instruction, X64Operand operand);
 static inline void SetImm16                     (X64Instruction* instruction, X64Operand operand);
 
@@ -363,6 +364,13 @@ static inline void SetModRmRmOperand(X64Instruction* instruction, X64Operand ope
 
                 SetRipAddressing(instruction, operand);
             }
+            else if (operand.value.reg == X64Register::NO_REG)
+            {
+                instruction->requireDisp32 = true;
+                instruction->requireSIB    = true;
+
+                SetAbsoluteAddressing(instruction, operand);
+            }
             else
             {
                 assert(operand.value.reg != X64Register::NO_REG);
@@ -513,6 +521,23 @@ static inline void SetModRmRmField(X64Instruction* instruction, uint8_t rmBits)
     static const size_t rmFieldShift = 0;
 
     instruction->modRM |= (rmBits << rmFieldShift);
+}
+
+static inline void SetAbsoluteAddressing(X64Instruction* instruction, X64Operand operand)
+{
+    static const uint8_t modRmSibMod = 0;
+    SetModRmModField(instruction, modRmSibMod);
+
+    static const uint8_t modRmSetSibRm = 4; // 0b100
+    SetModRmRmField(instruction, modRmSetSibRm);
+
+    static const uint8_t sibAbsoluteAddressingBase = 5; //  0b101
+    SetSibBase(instruction, sibAbsoluteAddressingBase);
+
+    static const uint8_t sibAbsoluteAddressingIndex = 4; // 0b100
+    SetSibIndex(instruction, sibAbsoluteAddressingIndex);
+
+    SetDisp32(instruction, operand);
 }
 
 static inline void SetRipAddressing(X64Instruction* instruction, X64Operand operand)

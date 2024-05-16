@@ -211,7 +211,7 @@ static void LoadRodataStrings(RodataStringsType* strings, FILE* outBinary, uint6
     for (size_t i = 0; i < strings->size; ++i)
     {
         const char* string = strings->data[i].string;
-
+        
         int putsRes = fputs(string, outBinary);
         assert(putsRes != EOF);
         putsRes     = fputc('\0', outBinary);

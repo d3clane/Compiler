@@ -49,17 +49,17 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand);
 
 //-----------------------------------------------------------------------------
 
-static inline void PrintRodata          (FILE* outStream, const RodataInfo* info);
+static inline void PrintRodata          (FILE* outStream, const RodataInfo* rodata);
 static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* rodataImmediates);
 static inline void PrintRodataStrings   (FILE* outStream, RodataStringsType*    rodataStrings);
 
-#define GET_STR_ADDR_IN_RODATA(STRING) GetStrAddrInRodata(STRING, info.rodataStrings)
+#define GET_STR_ADDR_IN_RODATA(STRING) GetStrAddrInRodata(STRING, rodata.rodataStrings)
 static inline RodataStringsValue*      GetStrAddrInRodata(const char* string, 
                                                           RodataStringsType* rodataString);
 
 static inline char* CreateStringLabel   (const char* string);
 
-#define GET_IMM_ADDR_IN_RODATA(IMM)  GetImmAddrInRodata(IMM, info.rodataImmediates);
+#define GET_IMM_ADDR_IN_RODATA(IMM)  GetImmAddrInRodata(IMM, rodata.rodataImmediates);
 static inline RodataImmediatesValue* GetImmAddrInRodata(const long long imm, 
                                                         RodataImmediatesType* rodataImm);
 
@@ -88,7 +88,7 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
 {
     assert(ir);
     
-    RodataInfo info = RodataInfoCtor();
+    RodataInfo rodata = RodataInfoCtor();
 
     static const size_t numberOfCompilationPasses = 2;
 
@@ -99,7 +99,7 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
     static const char* mainLabelName = "main";
 
     PrintEntry(outStream);
-    
+
     for (size_t compilationPass = 0; compilationPass < numberOfCompilationPasses; ++compilationPass)
     {
         IRNode* beginNode = IRHead(ir);
@@ -132,8 +132,8 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
             node = node->nextNode;
         }
 
-        PrintRodata(outStream, &info);
-        LoadRodata(&info, outBin);
+        PrintRodata(outStream, &rodata);
+        LoadRodata(&rodata, outBin);
 
         outStream = nullptr;
         // TODO: мне больше не надо писать в файл после первого прохода 
@@ -142,7 +142,7 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
     }
 
     LoadCode(code, outBin);
-    RodataInfoDtor(&info);
+    RodataInfoDtor(&rodata);
 }
 
 //-----------------------------------------------------------------------------
@@ -290,17 +290,17 @@ static inline void PrintEntry(FILE* outStream)
 
 //-----------------------------------------------------------------------------
 
-static inline void PrintRodata(FILE* outStream, const RodataInfo* info)
+static inline void PrintRodata(FILE* outStream, const RodataInfo* rodata)
 {
-    assert(info);
+    assert(rodata);
 
     if (!outStream)
         return;
 
     fprintf(outStream, "section .rodata\n\n");
 
-    PrintRodataImmediates(outStream, info->rodataImmediates);
-    PrintRodataStrings   (outStream, info->rodataStrings);
+    PrintRodataImmediates(outStream, rodata->rodataImmediates);
+    PrintRodataStrings   (outStream, rodata->rodataStrings);
 }
 
 static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* rodataImmediates)

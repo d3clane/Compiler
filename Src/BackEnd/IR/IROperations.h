@@ -157,9 +157,7 @@ DEF_IR_OP(F_MOV,
 
         PrintOperationInCodeArray(code, X64Operation::MOVSD, 
                                   ConvertIRToX64Operand(node->operand1),
-                                  X64OperandMemCreate(
-                                  X64Register::RIP, 
-                                  immInRodata->asmAddr - node->asmCmdEndAddress));
+                                  X64OperandMemCreate(X64Register::NO_REG, immInRodata->asmAddr));
 
     }
     else
@@ -266,9 +264,10 @@ DEF_IR_OP(STR_OUT,
 
     PrintOperationInCodeArray(code, X64Operation::LEA, 
                               X64OperandRegCreate(X64Register::RAX),
-                              X64OperandMemCreate(
-                              X64Register::RIP, 
-                              strInRodata->asmAddr - node->asmCmdEndAddress));
+                              X64OperandMemCreate(X64Register::NO_REG, strInRodata->asmAddr));
+
+    //fprintf(stderr, "STRING - %s, ADR - %x\n", strInRodata->string, strInRodata->asmAddr);
+    //fprintf(stderr, "Cmd end addr - %x\n", node->asmCmdEndAddress);
 
     PrintOperationInCodeArray(code, X64Operation::PUSH,
                               X64OperandRegCreate(X64Register::RAX));
