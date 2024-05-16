@@ -12,6 +12,6 @@
 typedef uint8_t CodeArrayValue;
 
 /// @brief Chosen CODE_VALUE_POISON value for stack
-static const CodeArrayValue CODE_VALUE_POISON = 0xDEAD;
+static const CodeArrayValue CODE_VALUE_POISON = 0xAA;
 
 #endif // TYPES_H

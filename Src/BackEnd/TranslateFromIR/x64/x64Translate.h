@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "BackEnd/IR/IRList/IR.h"
 
-void TranslateToX64(const IR* ir, FILE* outStream);
+void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin);
 
 #endif

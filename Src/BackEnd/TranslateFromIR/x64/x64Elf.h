@@ -35,7 +35,7 @@ enum class SegmentFilePos
     RODATA       = 0x3000,
 };
 
-static const char*  StdLibFileName = "StdLib57.elf";
+static const char*  StdLibCodeName = "StdLib57.elf";
 
 void LoadCode   (CodeArrayType* code, FILE* outBinary);
 void LoadRodata (RodataInfo* rodata,  FILE* outBinary);

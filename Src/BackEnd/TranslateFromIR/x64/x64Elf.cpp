@@ -118,7 +118,7 @@ void LoadCode(CodeArrayType* code, FILE* outBinary)
     fwrite(&ElfHeader,   sizeof(ElfHeader),   1, outBinary);
     fwrite(&codePheader, sizeof(codePheader), 1, outBinary);
 
-    LoadStdLibCode(outBinary);
+    //LoadStdLibCode(outBinary);
 
     // Write code
     fseek(outBinary, (long)SegmentFilePos::PROGRAM_CODE, SEEK_SET);
@@ -129,7 +129,7 @@ static void LoadStdLibCode(FILE* outBinary)
 {
     assert(outBinary);
 
-    FILE* stdLibStream = fopen(StdLibFileName, "rb");
+    FILE* stdLibStream = fopen(StdLibCodeName, "rb");
 
     uint8_t* text = (uint8_t*)ReadText(stdLibStream);
 
@@ -155,6 +155,7 @@ static void LoadStdLibCode(FILE* outBinary)
     fwrite(text + codePheader->p_offset, codePheader->p_filesz, 1, outBinary);
 
     free(text);
+    fclose(stdLibStream);
 }
 
 void LoadRodata(RodataInfo* rodata, FILE* outBinary)
@@ -185,7 +186,7 @@ static void LoadRodataImmediates(RodataImmediatesType* immediates, FILE* outBina
     assert(immediates);
     assert(outBinary);
     assert(asmAddr);
-
+    
     for (size_t i = 0; i < immediates->size; ++i)
     {
         long long imm = immediates->data[i].imm;
@@ -223,7 +224,7 @@ static void LoadStdLibRodata(FILE* outBinary, uint64_t* asmAddr)
     assert(outBinary);
     assert(asmAddr);
 
-    FILE* stdLibStream = fopen(StdLibFileName, "rb");
+    FILE* stdLibStream = fopen(StdLibCodeName, "rb");
 
     uint8_t* text = (uint8_t*)ReadText(stdLibStream);
 
@@ -241,4 +242,5 @@ static void LoadStdLibRodata(FILE* outBinary, uint64_t* asmAddr)
     *asmAddr += rodataPheader->p_filesz;
 
     free(text);
+    fclose(stdLibStream);
 }

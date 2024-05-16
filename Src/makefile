@@ -59,8 +59,12 @@ BACK_END_CPP = main.cpp
 BACK_END_OBJ = $(BACK_END_CPP:%.cpp=$(OBJECTDIR)/%.o)
 
 BACK_END_TRANSLATE_X64_DIR 	= BackEnd/TranslateFromIR/x64
-BACK_END_TRANSLATE_X64_CPP	= x64Translate.cpp x64Encode.cpp
+BACK_END_TRANSLATE_X64_CPP	= x64Translate.cpp x64Encode.cpp x64Elf.cpp
 BACK_END_TRANSLATE_X64_OBJ	= $(BACK_END_TRANSLATE_X64_CPP:%.cpp=$(OBJECTDIR)/%.o)
+
+BACK_END_TRANSLATE_X64_RODATA_DIR 	= BackEnd/TranslateFromIR/x64/RodataInfo
+BACK_END_TRANSLATE_X64_RODATA_CPP	= Rodata.cpp
+BACK_END_TRANSLATE_X64_RODATA_OBJ	= $(BACK_END_TRANSLATE_X64_RODATA_CPP:%.cpp=$(OBJECTDIR)/%.o)
 
 BACK_END_TRANSLATE_X64_RODATA_IMM_DIR 	= BackEnd/TranslateFromIR/x64/RodataInfo/RodataImmediates
 BACK_END_TRANSLATE_X64_RODATA_IMM_CPP	= RodataImmediates.cpp RodataImmediatesArrayFuncs.cpp \
@@ -71,6 +75,11 @@ BACK_END_TRANSLATE_X64_RODATA_STR_DIR 	= BackEnd/TranslateFromIR/x64/RodataInfo/
 BACK_END_TRANSLATE_X64_RODATA_STR_CPP	= RodataStrings.cpp RodataStringsArrayFuncs.cpp \
 										  RodataStringsHashFuncs.cpp
 BACK_END_TRANSLATE_X64_RODATA_STR_OBJ	= $(BACK_END_TRANSLATE_X64_RODATA_STR_CPP:%.cpp=$(OBJECTDIR)/%.o)
+
+BACK_END_TRANSLATE_X64_CODE_ARRAY_DIR 	= BackEnd/TranslateFromIR/x64/CodeArray
+BACK_END_TRANSLATE_X64_CODE_ARRAY_CPP	= CodeArray.cpp CodeArrayHashFuncs.cpp \
+										  CodeArrayArrayFuncs.cpp
+BACK_END_TRANSLATE_X64_CODE_ARRAY_OBJ	= $(BACK_END_TRANSLATE_X64_CODE_ARRAY_CPP:%.cpp=$(OBJECTDIR)/%.o)
 
 .PHONY: all docs clean buildDirs
 
@@ -84,6 +93,8 @@ $(PROGRAMDIR)/$(TARGET): $(TREE_OBJ) $(TREE_NAME_TABLE_OBJ) $(COMMON_OBJ) 			\
 						 $(BACK_END_TRANSLATE_X64_OBJ)								\
 						 $(BACK_END_TRANSLATE_X64_RODATA_STR_OBJ)					\
 						 $(BACK_END_TRANSLATE_X64_RODATA_IMM_OBJ)					\
+						 $(BACK_END_TRANSLATE_X64_RODATA_OBJ)						\
+						 $(BACK_END_TRANSLATE_X64_CODE_ARRAY_OBJ)					\
 						 $(FAST_INPUT_OBJ)
 	$(CXX) $^ -o $(PROGRAMDIR)/$(TARGET) $(CXXFLAGS)
 
@@ -103,6 +114,12 @@ $(OBJECTDIR)/%.o : $(BACK_END_DIR)/%.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) 
 
 $(OBJECTDIR)/%.o : $(BACK_END_TRANSLATE_X64_DIR)/%.cpp
+	$(CXX) -c $< -o $@ $(CXXFLAGS) 
+
+$(OBJECTDIR)/%.o : $(BACK_END_TRANSLATE_X64_CODE_ARRAY_DIR)/%.cpp
+	$(CXX) -c $< -o $@ $(CXXFLAGS) 
+
+$(OBJECTDIR)/%.o : $(BACK_END_TRANSLATE_X64_RODATA_DIR)/%.cpp
 	$(CXX) -c $< -o $@ $(CXXFLAGS) 
 
 $(OBJECTDIR)/%.o : $(BACK_END_TRANSLATE_X64_RODATA_STR_DIR)/%.cpp
