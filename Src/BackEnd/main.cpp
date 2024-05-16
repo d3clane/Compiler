@@ -20,6 +20,9 @@ int main(int argc, char* argv[])
     FILE* inStream     = fopen(argv[1], "r");
     FILE* outStream    = fopen(argv[2], "w");
     FILE* outBinStream = fopen(argv[3], "wb");
+    assert(inStream);
+    assert(outStream);
+    assert(outBinStream);
 
     Tree tree = {};
     TreeCtor(&tree);
@@ -35,13 +38,22 @@ int main(int argc, char* argv[])
 
     CodeArrayType* code = nullptr;
     CodeArrayCtor(&code, 0);
-    CodeArrayPush(code, 0x48); CodeArrayPush(code, 0xC7); CodeArrayPush(code, 0xC0);
-    CodeArrayPush(code, 0x3C); CodeArrayPush(code, 0x00); CodeArrayPush(code, 0x00);
-    CodeArrayPush(code, 0x00); CodeArrayPush(code, 0x48); CodeArrayPush(code, 0x31);
-    CodeArrayPush(code, 0xFF); CodeArrayPush(code, 0x0F); CodeArrayPush(code, 0x05);
+
+    union 
+    {
+        int value;
+        uint8_t bytes[4];
+    }tmp;
 
     RodataInfo rodata = RodataInfoCtor();
     
+    Rodata
+    LoadRodata(&rodata, outBinStream);
+
+    CodeArrayPush(code, 0xE8); CodeArrayPush()
+    tmp.value = (int)StdLibAddresses::HLT - (int)SegmentAddress::PROGRAM_CODE - 5;
+    CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
+
     LoadCode(code, outBinStream);
 
     RodataInfoDtor(&rodata);

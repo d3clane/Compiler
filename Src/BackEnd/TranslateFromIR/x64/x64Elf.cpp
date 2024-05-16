@@ -23,9 +23,10 @@ enum class HeaderPos
     ELF_HEADER = 0,
 
     STDLIB_PHEADER = sizeof(Elf64_Ehdr),
-    CODE_PHEADER   = sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr),
-
-    RODATA_PHEADER = sizeof(Elf64_Ehdr) + 2 * sizeof(Elf64_Phdr),
+    
+    RODATA_PHEADER = sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr),
+    
+    CODE_PHEADER   = sizeof(Elf64_Ehdr) + 2 * sizeof(Elf64_Phdr),
 };
 
 static const Elf64_Ehdr ElfHeader = 
@@ -79,7 +80,7 @@ static const Elf64_Phdr StdLibPheader =
 {
     .p_type   = PT_LOAD,             
     .p_flags  = PF_R | PF_X,                             // read and execute
-    .p_offset = (Elf64_Off) SegmentFilePos::STDLIB_CODE,  // code offset in file
+    .p_offset = (Elf64_Off) SegmentFilePos::STDLIB_CODE, // code offset in file
     .p_vaddr  = (Elf64_Addr)SegmentAddress::STDLIB_CODE, // virtual addr
     .p_paddr  = (Elf64_Addr)SegmentAddress::STDLIB_CODE, // physical addr
 
@@ -116,9 +117,11 @@ void LoadCode(CodeArrayType* code, FILE* outBinary)
 
     fseek(outBinary, 0, SEEK_SET);
     fwrite(&ElfHeader,   sizeof(ElfHeader),   1, outBinary);
+
+    fseek(outBinary, (long)HeaderPos::CODE_PHEADER, SEEK_SET);
     fwrite(&codePheader, sizeof(codePheader), 1, outBinary);
 
-    //LoadStdLibCode(outBinary);
+    LoadStdLibCode(outBinary);
 
     // Write code
     fseek(outBinary, (long)SegmentFilePos::PROGRAM_CODE, SEEK_SET);
@@ -137,7 +140,7 @@ static void LoadStdLibCode(FILE* outBinary)
     
     assert(elfHeader->e_phnum == 3);
     assert(elfHeader->e_entry == (Elf64_Addr)StdLibAddresses::ENTRY);
-    Elf64_Phdr* codePheader = (Elf64_Phdr*) (text + elfHeader->e_phoff + sizeof(Elf64_Ehdr));
+    Elf64_Phdr* codePheader = (Elf64_Phdr*) (text + elfHeader->e_phoff + sizeof(Elf64_Phdr));
     // assuming that code program header is the second one in program header table
     assert(codePheader->p_vaddr  == (Elf64_Addr)SegmentAddress::STDLIB_CODE &&
            codePheader->p_vaddr  == (Elf64_Addr)StdLibAddresses::ENTRY);
@@ -232,7 +235,7 @@ static void LoadStdLibRodata(FILE* outBinary, uint64_t* asmAddr)
     
     assert(elfHeader->e_phnum == 3);
     assert(elfHeader->e_entry == (Elf64_Addr)StdLibAddresses::ENTRY);
-    Elf64_Phdr* rodataPheader = (Elf64_Phdr*) (text + elfHeader->e_phoff + 2 * sizeof(Elf64_Ehdr));
+    Elf64_Phdr* rodataPheader = (Elf64_Phdr*) (text + elfHeader->e_phoff + 2 * sizeof(Elf64_Phdr));
     // assuming that code program header is the third one in program header table
     assert(rodataPheader->p_vaddr == (Elf64_Addr)SegmentAddress::RODATA);
 
