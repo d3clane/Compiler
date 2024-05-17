@@ -122,6 +122,8 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
                     break;
             }
 
+        #undef DEF_IR_OP
+        
             node->asmCmdEndAddress = (int)SegmentAddress::PROGRAM_CODE + code->size;
             node = node->nextNode;
         }
