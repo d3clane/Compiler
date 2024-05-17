@@ -4,9 +4,9 @@
 #include <stddef.h>
 #include <string.h>
 
-
 #include "x64Elf.h"
 #include "FastInput/InputOutput.h"
+#include "StdLib/StdLib.h"
 
 static void LoadStdLibCode(FILE* outBinary);
 
@@ -24,6 +24,14 @@ enum class HeaderPos
     RODATA_PHEADER = sizeof(Elf64_Ehdr) + sizeof(Elf64_Phdr),
     
     CODE_PHEADER   = sizeof(Elf64_Ehdr) + 2 * sizeof(Elf64_Phdr),
+};
+
+enum class SegmentFilePos
+{
+    STDLIB_CODE  = 0x1000,
+    RODATA       = 0x2000,
+    
+    PROGRAM_CODE = 0x3000,
 };
 
 static const Elf64_Ehdr ElfHeader = 

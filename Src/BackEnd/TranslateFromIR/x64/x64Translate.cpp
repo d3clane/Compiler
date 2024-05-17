@@ -7,6 +7,7 @@
 #include "x64Elf.h"
 #include "RodataInfo/Rodata.h"
 #include "CodeArray/CodeArray.h"
+#include "StdLib/StdLib.h"
 
 //-----------------------------------------------------------------------------
 
@@ -279,15 +280,13 @@ static inline void PrintAsmCodeLine(FILE* outStream, const char* format, ...)
 
 static inline void PrintEntry(FILE* outStream)
 {
-    static const char* stdLibSource = "StdLib57.s";
+    if (!outStream)
+        return;
 
-    if (outStream)
-    {
-        fprintf(outStream, "%%include '%s'\n\n"
-                           "section .text\n"
-                           "global _start\n\n",
-                           stdLibSource);
-    }
+    fprintf(outStream, "%%include '%s'\n\n"
+                        "section .text\n"
+                        "global _start\n\n",
+                        StdLibAsmName);
 }
 
 //-----------------------------------------------------------------------------

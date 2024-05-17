@@ -27,16 +27,6 @@ enum class SegmentAddress
     PROGRAM_CODE = 0x403000,
 };
 
-enum class SegmentFilePos
-{
-    STDLIB_CODE  = 0x1000,
-    RODATA       = 0x2000,
-    
-    PROGRAM_CODE = 0x3000,
-};
-
-static const char*  StdLibCodeName = "StdLib57.elf";
-
 void LoadCode   (CodeArrayType* code, FILE* outBinary);
 void LoadRodata (RodataInfo* rodata,  FILE* outBinary);
 
