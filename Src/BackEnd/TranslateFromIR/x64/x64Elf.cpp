@@ -15,9 +15,6 @@ static void LoadStdLibRodata(FILE* outBinary, uint64_t* asmAddr);
 static void LoadRodataImmediates(RodataImmediatesType* immediates, FILE* outBinary, uint64_t* asmAddr);
 static void LoadRodataStrings   (RodataStringsType*    strings,    FILE* outBinary, uint64_t* asmAddr);
 
-static const size_t NumberOfPheaders = 3;
-// code + stdlib + rodata
-
 enum class HeaderPos
 {
     ELF_HEADER = 0,
@@ -53,12 +50,12 @@ static const Elf64_Ehdr ElfHeader =
     .e_flags    = 0,                           // no flags
     .e_ehsize   = sizeof(Elf64_Ehdr),	       // header size
 
-    .e_phentsize = sizeof(Elf64_Phdr),         // program header table entry size
-    .e_phnum     = NumberOfPheaders,           // Number of program header entries.
+    .e_phentsize = sizeof(Elf64_Phdr),         // program header table one entry size
+    .e_phnum     = 3,                          // Number of program header entries.
 
     .e_shentsize = sizeof(Elf64_Shdr),         // section header size in bytes
     .e_shnum     = 0,                          // number of entries in section header table (not used)
-    .e_shstrndx  = SHN_UNDEF,                  // no section header table
+    .e_shstrndx  = SHN_UNDEF,                  // no section header string table
 };
 
 static const Elf64_Phdr ProgramCodePheader = 

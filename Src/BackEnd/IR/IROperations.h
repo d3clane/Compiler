@@ -16,9 +16,6 @@ DEF_IR_OP(NOP,
     {
         PRINT_OPERATION(NOP);
     }
-},
-{
-    
 })
 
 DEF_IR_OP(PUSH,
@@ -89,7 +86,7 @@ DEF_IR_OP(F_POW,
 DEF_IR_OP(F_SQRT,
 {
     PrintOperation(outStream, code, "SQRTPD", X64Operation::SQRTPD, 
-                   node->operand1, node->operand2);
+                   node->operand1, node->operand1);
 })
 
 DEF_IR_OP(F_SIN,
