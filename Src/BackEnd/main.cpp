@@ -11,18 +11,31 @@
 
 #include "TranslateFromIR/x64/x64Encode.h"
 
-int main(int argc, char* argv[])
-{
-    assert(argc > 3);
+static void ReadArgs(int argc, const char* argv[], 
+                     const char** inFileName, const char** outBinFileName, 
+                     const char** outAsmFileName);
 
+int main(int argc, const char* argv[])
+{
     LogOpen(argv[0]);
-    setbuf(stdout, nullptr);
-    FILE* inStream     = fopen(argv[1], "r");
-    FILE* outStream    = fopen(argv[2], "w");
-    FILE* outBinStream = fopen(argv[3], "wb");
+
+    const char* inFileName      = nullptr;
+    const char* outAsmFileName  = nullptr;
+    const char* outBinFileName  = nullptr;
+
+    ReadArgs(argc, argv, &inFileName, &outBinFileName, &outAsmFileName);
+
+    FILE* inStream     = fopen(inFileName, "r");
+    FILE* outBinStream = fopen(outBinFileName, "wb");
     assert(inStream);
-    assert(outStream);
     assert(outBinStream);
+
+    FILE* outAsmStream = nullptr;
+    if (outAsmFileName) 
+    {
+        outAsmStream = fopen(outAsmFileName, "w");
+        assert(outAsmStream);
+    }
 
     Tree tree = {};
     TreeCtor(&tree);
@@ -33,80 +46,31 @@ int main(int argc, char* argv[])
     //TreeGraphicDump(&tree, true, allNamesTable);
 
     IR* ir = IRBuild(&tree, allNamesTable);
-    IR_TEXT_DUMP(ir);
-    TranslateToX64(ir, outStream, outBinStream);
+    TranslateToX64(ir, outAsmStream, outBinStream);
 
-/*
-    CodeArrayType* code = nullptr;
-    CodeArrayCtor(&code, 0);
+    TreeDtor(&tree);
+    NameTableDtor(allNamesTable);
+    fclose(inStream);
+    fclose(outBinStream);
 
-    union 
+    if (outAsmStream) fclose(outAsmStream);
+}
+
+static void ReadArgs(int argc, const char* argv[], 
+                     const char** inFileName, const char** outBinFileName, 
+                     const char** outAsmFileName)
+{
+    if (argc != 3 && argc != 4)
     {
-        int value;
-        uint8_t bytes[4];
-    }tmp;
+        printf("Usage: %s [file with AST] [out binary file] [optional...]\n", argv[0]);
+        printf("Optional - [out asm file name]\n");
 
-    RodataInfo rodata = RodataInfoCtor();
-    
-    RodataStringsValue value = {};
-    RodataStringsValueCtor(&value, "enter value: ", "STR_1");
-    RodataStringsPush(rodata.rodataStrings, value);
-    LoadRodata(&rodata, outBinStream);
-
-    int addr = (int)SegmentAddress::PROGRAM_CODE;
-    tmp.value = rodata.rodataStrings->data[0].asmAddr;
-    fprintf(stderr, "TMP VALUE - %d\n", tmp.value);
-
-    CodeArrayPush(code, 0x48); CodeArrayPush(code, 0x8d); CodeArrayPush(code, 0x04); CodeArrayPush(code, 0x25); 
-    CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
-    CodeArrayPush(code, 0x50);
-    addr += 9;
-    addr += 5;
-    tmp.value = (int)StdLibAddresses::OUT_STRING - addr;
-    CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
-
-    addr += 5;
-    tmp.value = (int)StdLibAddresses::IN_FLOAT - addr;
-    CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
-
-    CodeArrayPush(code, 0x48), CodeArrayPush(code, 0x83),CodeArrayPush(code, 0xec), CodeArrayPush(code, 0x10);
-    CodeArrayPush(code, 0xf2), CodeArrayPush(code, 0x0f),CodeArrayPush(code, 0x11), CodeArrayPush(code, 0x04), CodeArrayPush(code, 0x24);
-    
-    addr += 9;
-    addr += 5;
-    tmp.value = (int)StdLibAddresses::OUT_FLOAT - addr;
-    CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
-
-    CodeArrayPush(code, 0x48), CodeArrayPush(code, 0x83),CodeArrayPush(code, 0xc4), CodeArrayPush(code, 0x10);
-    addr += 4;
-
-    addr += 5;
-    tmp.value = (int)StdLibAddresses::HLT - addr;
-    CodeArrayPush(code, 0xE8); CodeArrayPush(code, tmp.bytes[0]); CodeArrayPush(code, tmp.bytes[1]); CodeArrayPush(code, tmp.bytes[2]); CodeArrayPush(code, tmp.bytes[3]);
-
-    LoadCode(code, outBinStream);
-
-    RodataInfoDtor(&rodata);
-
-*/
-    /*
-    X64Operation op = X64Operation::LEA;
-    X64Operand op1  = {};
-    op1.type = X64OperandType::REG;
-    op1.value.imm = 256;
-    op1.value.reg = X64Register::RAX;
-
-    X64Operand op2  = {};
-    op2.type = X64OperandType::MEM;
-    op2.value.imm = -1;
-    op2.value.reg = X64Register::RIP;
-
-    size_t outInstructionLen = 0;
-    uint8_t* instruction = EncodeX64(op, op1, op2, &outInstructionLen);
-
-    for (size_t i = 0; i < outInstructionLen; ++i)
-    {
-        printf("%02x ", instruction[i]);
+        exit(0);
     }
-    */
+
+    *inFileName     = argv[1];
+    *outBinFileName = argv[2];
+    
+    if (argc == 4)
+        *outAsmFileName = argv[3];
 }
