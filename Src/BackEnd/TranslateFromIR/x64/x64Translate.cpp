@@ -32,8 +32,6 @@ static inline void PrintOperationInCodeArray(CodeArrayType* code, X64Operation x
 static inline void PrintOperationInCodeArray(CodeArrayType* code, X64Operation x64Operation,
                                              X64Operand operand1);
 
-#define PRINT_OPERATION_TWO_OPERANDS(OPERATION, OPERAND1, OPERAND2)         \
-    PrintOperation(outStream, code, #OPERATION, X64Operation::OPERATION, OPERAND1, OPERAND2)
 static inline void PrintOperation(FILE* outStream, CodeArrayType* code, 
                                   const char* operationName, X64Operation x64Operation,
                                   const IROperand operand1, const IROperand operand2);
@@ -42,10 +40,9 @@ static inline void PrintOperation(FILE* outStream, CodeArrayType* code,
                                   const char* operationName, X64Operation x64Operation,
                                   const IROperand operand1);
 
-#define PRINT_OPERAND(OPERAND) PrintOperand(outStream, OPERAND)
 static inline void PrintOperand(FILE* outStream, const IROperand operand);
 
-#define PRINT_FORMAT_STR(...) if (outStream) fprintf(outStream, __VA_ARGS__)
+static inline void PrintAsmCodeLine(FILE* outStream, const char* format, ...);
 
 //-----------------------------------------------------------------------------
 
@@ -53,14 +50,12 @@ static inline void PrintRodata          (FILE* outStream, const RodataInfo* roda
 static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* rodataImmediates);
 static inline void PrintRodataStrings   (FILE* outStream, RodataStringsType*    rodataStrings);
 
-#define GET_STR_ADDR_IN_RODATA(STRING) GetStrAddrInRodata(STRING, rodata.rodataStrings)
-static inline RodataStringsValue*      GetStrAddrInRodata(const char* string, 
+static inline RodataStringsValue*      GetStrLabelInfo(const char* string, 
                                                           RodataStringsType* rodataString);
 
 static inline char* CreateStringLabel   (const char* string);
 
-#define GET_IMM_ADDR_IN_RODATA(IMM)  GetImmAddrInRodata(IMM, rodata.rodataImmediates);
-static inline RodataImmediatesValue* GetImmAddrInRodata(const long long imm, 
+static inline RodataImmediatesValue* GetImmLabelInfo(const long long imm, 
                                                         RodataImmediatesType* rodataImm);
 
 static inline char* CreateImmediateLabel(const long long imm);
@@ -123,7 +118,7 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
             }
 
         #undef DEF_IR_OP
-        
+
             node->asmCmdEndAddress = (int)SegmentAddress::PROGRAM_CODE + code->size;
             node = node->nextNode;
         }
@@ -131,13 +126,13 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
         PrintRodata(outStream, &rodata);
         LoadRodata(&rodata, outBin);
 
-        outStream = nullptr;
-        // TODO: мне больше не надо писать в файл после первого прохода 
-        // но по факту это очень грубый костыль
+        outStream = nullptr; // don't print asm code after first compilation pass  
+
         node = node->nextNode;
     }
 
     LoadCode(code, outBin);
+
     RodataInfoDtor(&rodata);
     CodeArrayDtor(code);
 }
@@ -158,7 +153,6 @@ static inline void PrintOperation(FILE* outStream, CodeArrayType* code,
 {
     assert(code);
 
-    // Print to outStream
     if (outStream)
     {
         fprintf(outStream, "\t%s ", operationName);
@@ -174,8 +168,6 @@ static inline void PrintOperation(FILE* outStream, CodeArrayType* code,
 
         fprintf(outStream, "\n");
     }
-
-    // Print to code
 
     PrintOperationInCodeArray(code, x64Operation, numberOfOperands, 
                               ConvertIRToX64Operand(operand1), ConvertIRToX64Operand(operand2));
@@ -270,6 +262,19 @@ static inline void PrintOperand(FILE* outStream, const IROperand operand)
     }
 }
 
+static inline void PrintAsmCodeLine(FILE* outStream, const char* format, ...)
+{
+    if (!outStream)
+        return;
+
+    va_list args = {};
+    va_start(args, format);
+
+    vfprintf(outStream, format, args);
+
+    va_end(args);
+}
+
 //-----------------------------------------------------------------------------
 
 static inline void PrintEntry(FILE* outStream)
@@ -317,7 +322,7 @@ static inline void PrintRodataImmediates(FILE* outStream, RodataImmediatesType* 
         long long imm = rodataImmediates->data[i].imm;
         doubleBytes.value = (double)imm;
 
-        const char* immLabel = GetImmAddrInRodata(imm, rodataImmediates)->label;
+        const char* immLabel = GetImmLabelInfo(imm, rodataImmediates)->label;
 
         fprintf(outStream, "%s:\n"
                            "\tdd %d\n"
@@ -334,7 +339,7 @@ static inline void PrintRodataStrings   (FILE* outStream, RodataStringsType* rod
     for (size_t i = 0; i < rodataStrings->size; ++i)
     {
         const char* string = rodataStrings->data[i].string;
-        const char* stringLabel = GetStrAddrInRodata(string, rodataStrings)->label;
+        const char* stringLabel = GetStrLabelInfo(string, rodataStrings)->label;
 
         fprintf(outStream, "%s:\n"
                            "\tdb \'%s\', 0\n\n", 
@@ -357,8 +362,8 @@ static inline char* CreateStringLabel(const char* string)
     return strdup(label);   
 }
 
-static inline RodataStringsValue* GetStrAddrInRodata(const char* string, 
-                                                 RodataStringsType* rodataStrings)
+static inline RodataStringsValue* GetStrLabelInfo(const char* string, 
+                                                  RodataStringsType* rodataStrings)
 {
     assert(string);
 
@@ -384,8 +389,8 @@ static inline RodataStringsValue* GetStrAddrInRodata(const char* string,
     return value;
 }
 
-static inline RodataImmediatesValue* GetImmAddrInRodata(const long long imm, 
-                                                       RodataImmediatesType* rodataImmediates)
+static inline RodataImmediatesValue* GetImmLabelInfo(const long long imm, 
+                                                     RodataImmediatesType* rodataImmediates)
 {
     RodataImmediatesValue* value = nullptr;
     RodataImmediatesFind(rodataImmediates, imm, &value);

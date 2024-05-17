@@ -88,7 +88,8 @@ DEF_IR_OP(F_POW,
 
 DEF_IR_OP(F_SQRT,
 {
-    PRINT_OPERATION_TWO_OPERANDS(SQRTPD, node->operand1, node->operand1);
+    PrintOperation(outStream, code, "SQRTPD", X64Operation::SQRTPD, 
+                   node->operand1, node->operand2);
 })
 
 DEF_IR_OP(F_SIN,
@@ -113,10 +114,10 @@ DEF_IR_OP(F_COT,
 
 DEF_IR_OP(F_PUSH,
 {
-    PRINT_FORMAT_STR("\tSUB RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
-    PRINT_FORMAT_STR("\tMOVSD [RSP], ");
-    PRINT_OPERAND(node->operand1);
-    PRINT_FORMAT_STR("\n");
+    PrintAsmCodeLine(outStream, "\tSUB RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
+    PrintAsmCodeLine(outStream, "\tMOVSD [RSP], ");
+    PrintOperand    (outStream, node->operand1);
+    PrintAsmCodeLine(outStream, "\n");
 
     PrintOperationInCodeArray(code, X64Operation::SUB, 
                               X64OperandRegCreate(X64Register::RSP),
@@ -129,9 +130,10 @@ DEF_IR_OP(F_PUSH,
 
 DEF_IR_OP(F_POP,
 {
-    PRINT_FORMAT_STR("\tMOVSD ");
-    PRINT_OPERAND(node->operand1); PRINT_FORMAT_STR(", [RSP]\n");
-    PRINT_FORMAT_STR("\tADD RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
+    PrintAsmCodeLine(outStream, "\tMOVSD ");
+    PrintOperand    (outStream, node->operand1); 
+    PrintAsmCodeLine(outStream, ", [RSP]\n");
+    PrintAsmCodeLine(outStream, "\tADD RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
 
     PrintOperationInCodeArray(code, X64Operation::MOVSD,
                               ConvertIRToX64Operand(node->operand1),
@@ -146,18 +148,18 @@ DEF_IR_OP(F_MOV,
 {
     if (node->operand2.type == IROperandType::IMM)
     {
-        PRINT_FORMAT_STR("\tMOVSD ");
-        PRINT_OPERAND(node->operand1);
+        PrintAsmCodeLine(outStream, "\tMOVSD ");
+        PrintOperand    (outStream, node->operand1);
 
         long long imm = node->operand2.value.imm;
 
-        RodataImmediatesValue* immInRodata = GET_IMM_ADDR_IN_RODATA(imm);
+        RodataImmediatesValue* immLabelInfo = GetImmLabelInfo(imm, rodata.rodataImmediates);
 
-        PRINT_FORMAT_STR(", [%s]\n", immInRodata->label);
+        PrintAsmCodeLine(outStream, ", [%s]\n", immLabelInfo->label);
 
         PrintOperationInCodeArray(code, X64Operation::MOVSD, 
                                   ConvertIRToX64Operand(node->operand1),
-                                  X64OperandMemCreate(X64Register::NO_REG, immInRodata->asmAddr));
+                                  X64OperandMemCreate(X64Register::NO_REG, immLabelInfo->asmAddr));
 
     }
     else
@@ -224,11 +226,11 @@ DEF_IR_OP(RET,
 
 DEF_IR_OP(F_OUT,
 {
-    PRINT_FORMAT_STR("\tSUB RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
-    PRINT_FORMAT_STR("\tMOVSD [RSP], ");
-    PRINT_OPERAND(node->operand1);
-    PRINT_FORMAT_STR("\n");
-    PRINT_FORMAT_STR("\tCALL StdFOut\n");
+    PrintAsmCodeLine(outStream, "\tSUB RSP, %d\n", (int)XMM_REG_BYTE_SIZE);
+    PrintAsmCodeLine(outStream, "\tMOVSD [RSP], ");
+    PrintOperand    (outStream, node->operand1);
+    PrintAsmCodeLine(outStream, "\n");
+    PrintAsmCodeLine(outStream, "\tCALL StdFOut\n");
     
     PrintOperationInCodeArray(code, X64Operation::SUB, 
                               X64OperandRegCreate(X64Register::RSP),
@@ -245,7 +247,7 @@ DEF_IR_OP(F_OUT,
 
 DEF_IR_OP(F_IN,
 {
-    PRINT_FORMAT_STR("\tCALL StdIn\n");
+    PrintAsmCodeLine(outStream, "\tCALL StdIn\n");
 
     PrintOperationInCodeArray(code, X64Operation::CALL,
                               X64OperandImmCreate(
@@ -256,15 +258,15 @@ DEF_IR_OP(STR_OUT,
 {
     const char* string = node->operand1.value.string;
 
-    RodataStringsValue* strInRodata  = GET_STR_ADDR_IN_RODATA(string);
+    RodataStringsValue* strLabelInfo  = GetStrLabelInfo(string, rodata.rodataStrings);
 
-    PRINT_FORMAT_STR("\tLEA RAX, [%s]\n", strInRodata->label);
-    PRINT_FORMAT_STR("\tPUSH RAX\n");
-    PRINT_FORMAT_STR("\tCALL StdStrOut\n");
+    PrintAsmCodeLine(outStream, "\tLEA RAX, [%s]\n", strLabelInfo->label);
+    PrintAsmCodeLine(outStream, "\tPUSH RAX\n");
+    PrintAsmCodeLine(outStream, "\tCALL StdStrOut\n");
 
     PrintOperationInCodeArray(code, X64Operation::LEA, 
                               X64OperandRegCreate(X64Register::RAX),
-                              X64OperandMemCreate(X64Register::NO_REG, strInRodata->asmAddr));
+                              X64OperandMemCreate(X64Register::NO_REG, strLabelInfo->asmAddr));
 
     PrintOperationInCodeArray(code, X64Operation::PUSH,
                               X64OperandRegCreate(X64Register::RAX));
@@ -276,7 +278,7 @@ DEF_IR_OP(STR_OUT,
 
 DEF_IR_OP(HLT,
 {
-    PRINT_FORMAT_STR("\tCALL StdHlt\n");
+    PrintAsmCodeLine(outStream, "\tCALL StdHlt\n");
 
     PrintOperationInCodeArray(code, X64Operation::CALL,
                               X64OperandImmCreate(
