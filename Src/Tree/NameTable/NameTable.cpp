@@ -235,6 +235,9 @@ NameTableErrors NameTableDtor(NameTableType* const nameTable)
     
     for (size_t i = 0; i < nameTable->size; ++i)
     {
+        if (nameTable->data[i].localNameTable)
+            NameTableDtor((NameTableType*)nameTable->data[i].localNameTable);
+            
         free(nameTable->data[i].name);
         nameTable->data[i] = NAME_TABLE_POISON;
     }

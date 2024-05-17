@@ -151,6 +151,8 @@ static inline const char* NameTableGetName(const NameTableType* table, size_t po
 static inline void NameTableSetLocalTable(const NameTableType* table, size_t pos, 
                                           NameTableType* localTable)
 {
+    if (table->data[pos].localNameTable)
+        NameTableDtor((NameTableType*)table->data[pos].localNameTable);
     table->data[pos].localNameTable = localTable;
 }
 

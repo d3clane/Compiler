@@ -143,6 +143,7 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
 
     LoadCode(code, outBin);
     RodataInfoDtor(&rodata);
+    CodeArrayDtor(code);
 }
 
 //-----------------------------------------------------------------------------

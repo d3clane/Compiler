@@ -71,7 +71,8 @@ enum class IRErrors
 
 //-----------------------------------------------
 
-IR* IRCtor();
+IR*  IRCtor();
+void IRDtor(IR* ir);
 
 void    IRPushBack(IR* irList, IRNode* node);
 IRNode* IRHead    (const IR* irList);
@@ -87,6 +88,9 @@ IRNode* IRNodeCreate(IROperation operation, IROperand operand1, IROperand operan
                      bool needPatch = false);
 IRNode* IRNodeCreate(IROperation operation);
 IRNode* IRNodeCreate(const char* labelName);
+IRNode* IRNodeCtor();
+
+void IRNodeDtor(IRNode* node);
 
 //-----------------------------------------------
 
@@ -97,7 +101,8 @@ void IROperandValueDtor (IROperandValue* value);
 
 IROperand IROperandCtor();
 IROperand IROperandCreate(IROperandValue val, IROperandType type);
-IRNode*   IRNodeCtor();
+
+void      IROperandDtor(IROperand* operand);
 
 IROperand IROperandRegCreate    (IRRegister reg);
 IROperand IROperandImmCreate    (const long long imm);

@@ -50,9 +50,10 @@ int main(int argc, const char* argv[])
 
     TreeDtor(&tree);
     NameTableDtor(allNamesTable);
+    IRDtor(ir);
+
     fclose(inStream);
     fclose(outBinStream);
-
     if (outAsmStream) fclose(outAsmStream);
 }
 

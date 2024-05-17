@@ -127,6 +127,11 @@ IROperand IROperandCtor()
     return operand;
 }
 
+void IROperandDtor(IROperand* operand)
+{
+    IROperandValueDtor(&operand->value);
+}
+
 IROperand IROperandCreate(IROperandValue val, IROperandType type)
 {
     IROperand operand = 
@@ -160,6 +165,16 @@ IRNode* IRNodeCtor()
     return node;
 }
 
+void IRNodeDtor(IRNode* node)
+{
+    if (node->labelName)
+        free(node->labelName);
+    
+    IROperandDtor(&node->operand1);
+    IROperandDtor(&node->operand2);
+    free(node);
+}
+
 IR* IRCtor()
 {
     IR* ir = (IR*)calloc(1, sizeof(*ir));
@@ -171,6 +186,22 @@ IR* IRCtor()
     ir->end->prevNode = ir->end;
 
     return ir;
+}
+
+void IRDtor(IR* ir)
+{
+    IRNode* beginNode = IRHead(ir);
+    IRNode* node      = beginNode;
+
+    do
+    {
+        IRNode* nextNode = node->nextNode;
+        IRNodeDtor(node);
+
+        node = nextNode;
+    } while (node != beginNode);
+    
+    free(ir);
 }
 
 void IROperandValueDtor(IROperandValue* value)
