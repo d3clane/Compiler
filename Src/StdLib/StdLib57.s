@@ -114,7 +114,7 @@ StdStrOut:
         
         mov rsp, rbp
         pop rbp
-        ret 1
+        ret 8
 
 StrLen:     cld 
 
@@ -189,7 +189,7 @@ PRINT_AFTER_POINT:
 
         mov rsp, rbp
         pop rbp
-        ret 1
+        ret 16
 
 
 
