@@ -95,9 +95,6 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
     CodeArrayType* code = nullptr;
     CodeArrayCtor(&code, 0);
 
-    IRNode* mainLabel = nullptr;
-    static const char* mainLabelName = "main";
-
     PrintEntry(outStream);
 
     for (size_t compilationPass = 0; compilationPass < numberOfCompilationPasses; ++compilationPass)
@@ -105,14 +102,11 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
         IRNode* beginNode = IRHead(ir);
         IRNode* node = beginNode->nextNode;
 
-        CodeArrayDtor(code);
+        CodeArrayDtor(code);    // each pass writing code again but having more information
         CodeArrayCtor(&code, 0);
 
         while (node != beginNode)
         {
-            if (!mainLabel && node->labelName && strcmp(node->labelName, mainLabelName) == 0)
-                mainLabel = node;
-
             node->asmCmdBeginAddress = (int)SegmentAddress::PROGRAM_CODE + code->size;
         #define DEF_IR_OP(OP_NAME, X64_GEN, ...)            \
             case IROperation::OP_NAME:                      \
