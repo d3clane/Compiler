@@ -261,6 +261,8 @@ LabelTableErrors LabelTableDtor(LabelTableType* const labelTable)
         labelTable->structCanaryRight = 0;
     )
 
+    free(labelTable);
+    
     return LabelTableErrors::NO_ERR;
 }
 

@@ -262,6 +262,8 @@ RodataStringsErrors RodataStringsDtor(RodataStringsType* const rodataStrings)
         rodataStrings->structCanaryRight = 0;
     )
 
+    free(rodataStrings);
+    
     return RodataStringsErrors::NO_ERR;
 }
 

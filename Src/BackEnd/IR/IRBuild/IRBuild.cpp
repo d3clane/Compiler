@@ -425,7 +425,7 @@ static void BuildIf(const TreeNode* node, CompilerInfoState* info)
     assert(info->ir);
 
     // TODO: можно отдельную функцию, где иду в condition и там, основываясь сразу на сравнении,
-    // Деляю вывод о jump to if end / not jump (типо на стек не кладу, выгодно по времени)
+    // Делаю вывод о jump to if end / not jump (типо на стек не кладу, выгодно по времени)
 
     size_t id = info->labelId;
     info->labelId += 1;

@@ -261,6 +261,8 @@ RodataImmediatesErrors RodataImmediatesDtor(RodataImmediatesType* const rodataIm
         rodataImmediates->structCanaryRight = 0;
     )
 
+    free(rodataImmediates);
+    
     return RodataImmediatesErrors::NO_ERR;
 }
 

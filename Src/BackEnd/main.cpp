@@ -5,9 +5,6 @@
 #include "IR/IRBuild/IRBuild.h"
 #include "TranslateFromIR/x64/x64Translate.h"
 #include "Common/Log.h"
-#include "TranslateFromIR/x64/CodeArray/CodeArray.h"
-#include "TranslateFromIR/x64/RodataInfo/Rodata.h"
-#include "TranslateFromIR/x64/x64Elf.h"
 
 #include "TranslateFromIR/x64/x64Encode.h"
 

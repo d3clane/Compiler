@@ -237,7 +237,7 @@ NameTableErrors NameTableDtor(NameTableType* const nameTable)
     {
         if (nameTable->data[i].localNameTable)
             NameTableDtor((NameTableType*)nameTable->data[i].localNameTable);
-            
+
         free(nameTable->data[i].name);
         nameTable->data[i] = NAME_TABLE_POISON;
     }
@@ -264,6 +264,8 @@ NameTableErrors NameTableDtor(NameTableType* const nameTable)
         nameTable->structCanaryRight = 0;
     )
 
+    free(nameTable);
+    
     return NameTableErrors::NO_ERR;
 }
 

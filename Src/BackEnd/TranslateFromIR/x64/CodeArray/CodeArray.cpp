@@ -260,6 +260,8 @@ CodeArrayErrors CodeArrayDtor(CodeArrayType* const codeArray)
         codeArray->structCanaryRight = 0;
     )
 
+    free(codeArray);
+    
     return CodeArrayErrors::NO_ERR;
 }
 
