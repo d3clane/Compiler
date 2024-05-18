@@ -16,6 +16,45 @@ static const uint8_t OpcodePrefix1_0F   = 0x0F;
 static const uint8_t OpcodePrefix2_38   = 0x38;
 static const uint8_t OpcodePrefix2_3A   = 0x3A;
 
+struct X64Instruction
+{
+    struct 
+    {
+        bool requireMandatoryPrefix     : 1;
+        bool requireREX                 : 1;
+        bool requireOpcodePrefix1       : 1;
+        bool requireOpcodePrefix2       : 1;
+        bool requireModRM               : 1;
+        bool requireSIB                 : 1;
+        bool requireDisp32              : 1;
+        bool requireImm32               : 1;
+        bool requireImm16               : 1;
+    };
+
+    uint8_t mandatoryPrefix;
+    uint8_t rex;
+    uint8_t opcodePrefix1;
+    uint8_t opcodePrefix2;
+    uint8_t opcode;
+    uint8_t modRM;
+    uint8_t sib;
+
+    int32_t disp32;
+    int32_t imm32;
+    int16_t imm16;
+};
+
+enum class X64OperandByteTarget
+{
+    OPCODE,
+
+    MODRM_REG,
+    MODRM_RM,
+
+    IMM32,
+    IMM16,      ///< for RET instruction
+};
+
 static inline void SetOperands(X64Instruction* instruction, size_t numberOfOperands,
                                X64Operand operand1, X64Operand operand2,
                                X64OperandByteTarget operand1Target, 
@@ -49,25 +88,31 @@ static inline void SetAbsoluteAddressing        (X64Instruction* instruction, X6
 static inline void SetImm32                     (X64Instruction* instruction, X64Operand operand);
 static inline void SetImm16                     (X64Instruction* instruction, X64Operand operand);
 
+static X64Instruction X64InstructionCtor();
+
+static void X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
+                               X64Operand operand1, X64Operand operand2,
+                               X64OperandByteTarget operand1Target, 
+                               X64OperandByteTarget operand2Target);
+
 static X64Instruction X64InstructionInit(X64Operation operation, size_t numberOfOperands, 
                                          X64Operand operand1, X64Operand operand2);
 
 #define EMPTY_BYTE_TARGET   X64OperandByteTarget::IMM32 // some default value
 #define BYTE_TARGET(TARGET) X64OperandByteTarget::TARGET
 
-void X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
-                        X64Operand operand1, X64Operand operand2,
-                        X64OperandByteTarget operand1Target, 
-                        X64OperandByteTarget operand2Target)
+#define X64_INSTRUCTION_INIT(OPERAND1_TARGET, OPERAND2_TARGET)              \
+    X64InstructionInit(&instruction, numberOfOperands, operand1, operand2,  \
+                       OPERAND1_TARGET, OPERAND2_TARGET)
+
+static void X64InstructionInit(X64Instruction* instruction, size_t numberOfOperands, 
+                               X64Operand operand1, X64Operand operand2,
+                               X64OperandByteTarget operand1Target, 
+                               X64OperandByteTarget operand2Target)
 {
     SetOperands(instruction, numberOfOperands, operand1, operand2, 
                 operand1Target, operand2Target);
 }
-
-
-#define X64_INSTRUCTION_INIT(OPERAND1_TARGET, OPERAND2_TARGET)              \
-    X64InstructionInit(&instruction, numberOfOperands, operand1, operand2,  \
-                       OPERAND1_TARGET, OPERAND2_TARGET)
 
 static X64Instruction X64InstructionInit(X64Operation operation, size_t numberOfOperands, 
                                          X64Operand operand1, X64Operand operand2)
@@ -91,7 +136,7 @@ static X64Instruction X64InstructionInit(X64Operation operation, size_t numberOf
     return instruction;
 }
 
-X64Instruction X64InstructionCtor()
+static X64Instruction X64InstructionCtor()
 {
     X64Instruction instruction = {};
 
@@ -555,9 +600,6 @@ static inline void SetImm16(X64Instruction* instruction, X64Operand operand)
 {
     instruction->imm16 = (int16_t)operand.value.imm;
 }
-
-// TODO: копипаста. Ваще подумать что в функции можно передавать шифт как будто и избавиться от копипасты
-// но ваще как будто разница тем что я меняю одну строчку с | на вызов функции ваще никакая???
 
 static inline void SetRexDefault (X64Instruction* instruction)
 {
