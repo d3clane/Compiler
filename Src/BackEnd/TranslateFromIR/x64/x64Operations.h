@@ -2,11 +2,10 @@
 #define DEF_X64_OP(...)
 #endif
 
-#include "x64Encode.h"
+// DEF_X64_OP(OP_NAME, INSTRUCTION_INIT_CODE)
 
-// DEF_X64_OP(OP_NAME, ...)
-
-// Vars : IRNode* node
+// Available Vars    : IRNode* node, X64Instruction instruction
+// Available defines : BYTE_TARGET(), EMPTY_BYTE_TARGET from x64Encode.cpp
 
 DEF_X64_OP(NOP,
 {

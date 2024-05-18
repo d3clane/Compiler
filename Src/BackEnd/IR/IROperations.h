@@ -2,9 +2,15 @@
 #define DEF_IR_OP(...)
 #endif
 
-// DEF_IR_OP(OP_NAME, ...)
+// DEF_IR_OP(OP_NAME, X64_GEN_CODE)
 // PRINT_LABEL(LABEL) - prints label to outStream x64 asm
-// Vars : IRNode*
+
+// PRINT_OPERATION(OP_NAME) - prints operation. Operands are taken from current node info
+
+// PrintOperation(outStream, code, opNameInX64Asm, X64Operation, IROperand operand1, 
+//                                                               IROperand operand2)
+
+// Vars : IRNode* node, FILE* outStream, CodeArrayType* code
 
 DEF_IR_OP(NOP,
 {

@@ -713,28 +713,6 @@ static inline void              CompilerInfoStateDtor(CompilerInfoState* info)
     info->regShift           = IR_REG(NO_REG);
 }
 
-
-static inline void CreateImgInLogFile(const size_t imgIndex, bool openImg)
-{
-    static const size_t maxImgNameLength  = 64;
-    static char imgName[maxImgNameLength] = "";
-    snprintf(imgName, maxImgNameLength, "../imgs/img_%zu_time_%s.png", imgIndex, __TIME__);
-
-    static const size_t     maxCommandLength  = 128;
-    static char commandName[maxCommandLength] =  "";
-    snprintf(commandName, maxCommandLength, "dot TreeHandler.dot -T png -o %s", imgName);
-    system(commandName);
-
-    snprintf(commandName, maxCommandLength, "<img src = \"%s\">\n", imgName);    
-    Log(commandName);
-
-    if (openImg)
-    {
-        snprintf(commandName, maxCommandLength, "open %s", imgName);
-        system(commandName);
-    }
-}
-
 //---------------------------------------------------------------------------------------
 
 #undef IR_REG

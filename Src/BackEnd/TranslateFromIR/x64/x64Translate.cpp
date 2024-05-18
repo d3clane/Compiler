@@ -98,7 +98,7 @@ void TranslateToX64(const IR* ir, FILE* outStream, FILE* outBin)
         IRNode* beginNode = IRHead(ir);
         IRNode* node = beginNode->nextNode;
 
-        CodeArrayDtor(code);    // each pass writing code again but having more information
+        CodeArrayDtor(code);    // each pass writing code again
         CodeArrayCtor(&code, 0);
 
         while (node != beginNode)
