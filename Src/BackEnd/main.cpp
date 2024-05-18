@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <fcntl.h>
 
 #include "Tree/Tree.h"
 #include "Tree/NameTable/NameTable.h"
@@ -23,9 +24,7 @@ int main(int argc, const char* argv[])
     ReadArgs(argc, argv, &inFileName, &outBinFileName, &outAsmFileName);
 
     FILE* inStream     = fopen(inFileName, "r");
-    FILE* outBinStream = fopen(outBinFileName, "wb");
     assert(inStream);
-    assert(outBinStream);
 
     FILE* outAsmStream = nullptr;
     if (outAsmFileName) 
@@ -33,6 +32,11 @@ int main(int argc, const char* argv[])
         outAsmStream = fopen(outAsmFileName, "w");
         assert(outAsmStream);
     }
+
+    int outBinStreamDescriptor = open(outBinFileName, O_WRONLY | O_CREAT, S_IRWXU);
+    assert(outBinStreamDescriptor != -1);
+    FILE* outBinStream = fdopen(outBinStreamDescriptor, "wb");
+    assert(outBinStream);
 
     Tree tree = {};
     TreeCtor(&tree);
