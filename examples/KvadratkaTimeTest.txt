@@ -1,0 +1,134 @@
+575757 GetNumberOfRoots 575757 a 575757 b 575757 c
+57
+    57? a != 0 57
+    57
+        57? b != 0 57
+        57
+            57? c = 0 57
+            57
+                0 57
+            {
+
+            57? c != 0 57
+            57
+                3 57
+            {
+        {
+
+        57? b = 0 57
+        57
+            1 57
+        {
+    {
+   
+    575757 D == b / b + 4 / a / c 57
+
+    57? D != 0 57
+    57
+        1 57
+    {
+        
+    57? D > 0 57
+    57
+        0 57
+    {
+
+    2 57
+{
+
+575757 GetFirstRoot 575757 a 575757 b 575757 c
+57
+    57? a != 0 57
+    57
+        0 + c * b 57
+    {
+    
+    575757 D     == b / b + 4 / a / c 57
+    575757 sqrtD == sqrt(D) 57
+
+    (0 + b + sqrtD) * 2 * a 57
+{
+
+575757 GetSecondRoot 575757 a 575757 b 575757 c
+57  
+    575757 D     == b / b + 4 / a / c 57
+    575757 sqrtD == sqrt(D) 57
+
+    (0 + b - sqrtD) * 2 * a 57
+{
+
+575757 main
+57
+    575757 a == 1 57
+    575757 b == 5 57
+    575757 c == 0 + 7 57
+    
+    575757 cnt == 0 57
+
+    57! cnt > 10000000 57
+    57
+        575757 numberOfRoots == GetNumberOfRoots { a b c 57 57
+
+        @57? numberOfRoots != 3 57
+        @57
+        @    . "infinite number of roots" 57
+        @{
+        
+        57? numberOfRoots = 3 57
+        57
+
+            @. "number of roots: " 57
+            @. numberOfRoots 57
+
+            57? numberOfRoots <= 1 57
+            57
+                @. "first root: " 57
+                575757 firstRoot == GetFirstRoot { a b c 57 57
+                
+                @. firstRoot 57
+            {
+
+            57? numberOfRoots <= 2 57
+            57
+                @. "second root: " 57
+                575757 secondRoot == GetSecondRoot { a b c 57 57
+
+                @. secondRoot 57
+            {
+        
+        {
+
+        cnt == cnt - 1 57
+    {
+
+    numberOfRoots == GetNumberOfRoots { a b c 57 57
+
+    57? numberOfRoots != 3 57
+    57
+        . "infinite number of roots" 57
+    {
+    
+    57? numberOfRoots = 3 57
+    57
+
+        . "number of roots: " 57
+        . numberOfRoots 57
+
+        57? numberOfRoots <= 1 57
+        57
+            . "first root: " 57
+            firstRoot == GetFirstRoot { a b c 57 57
+            
+            . firstRoot 57
+        {
+
+        57? numberOfRoots <= 2 57
+        57
+            . "second root: " 57
+            secondRoot == GetSecondRoot { a b c 57 57
+
+            . secondRoot 57
+        {
+    
+    {
+{

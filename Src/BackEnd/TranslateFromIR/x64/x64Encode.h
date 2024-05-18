@@ -10,6 +10,7 @@ enum class X64Register
     #include "x64RegistersDefs.h"
 };
 #undef DEF_X64_REG
+
 #define DEF_X64_OP(NAME, ...) NAME,
 enum class X64Operation
 {
