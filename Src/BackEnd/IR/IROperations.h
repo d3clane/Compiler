@@ -192,25 +192,25 @@ DEF_IR_OP(JNE,
     PRINT_OPERATION(JNE);
 })
 
-DEF_IR_OP(JL,
+DEF_IR_OP(JB,
 {
     SetLabelRelativeShift(node);
     PRINT_OPERATION(JB);
 })
 
-DEF_IR_OP(JLE,
+DEF_IR_OP(JBE,
 {
     SetLabelRelativeShift(node);
     PRINT_OPERATION(JBE);
 })
 
-DEF_IR_OP(JG,
+DEF_IR_OP(JA,
 {
     SetLabelRelativeShift(node);
     PRINT_OPERATION(JA);
 })
 
-DEF_IR_OP(JGE,
+DEF_IR_OP(JAE,
 {
     SetLabelRelativeShift(node);
     PRINT_OPERATION(JAE);

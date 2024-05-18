@@ -2,7 +2,7 @@
 #define GENERATE_OPERATION_CMD(...)
 #endif
 
-// GENERATE_OPERATION_CMD(NAME, CALC_FUNC, NUMBER_OF_SONS_IN_AST, IR_ARITHM_OP, IR_JMP_OP, ...)
+// GENERATE_OPERATION_CMD(NAME, CALC_FUNC, BUILD_IR_CODE, ...)
 
 #define CALC_CHECK()            \
 do                              \
@@ -17,7 +17,9 @@ GENERATE_OPERATION_CMD(ADD,
 
     return val1 + val2;
 },
-2, F_ADD, NOP)
+{
+    BuildALUOp(OP(F_ADD), 2, node, info);
+})
 
 GENERATE_OPERATION_CMD(SUB,
 {
@@ -25,15 +27,21 @@ GENERATE_OPERATION_CMD(SUB,
 
     return val1 - val2;
 },
-2, F_SUB, NOP)
+{
+    BuildALUOp(OP(F_SUB), 2, node, info);
+})
 
 GENERATE_OPERATION_CMD(UNARY_SUB,
 {
+    assert(false);
+
     assert(isfinite(val1));
 
     return -val1;
 },
-1, NOP, NOP)
+{
+    assert(false);
+})
 
 GENERATE_OPERATION_CMD(MUL,
 {
@@ -41,7 +49,9 @@ GENERATE_OPERATION_CMD(MUL,
 
     return val1 * val2;
 },
-2, F_MUL, NOP)
+{
+    BuildALUOp(OP(F_MUL), 2, node, info);
+})
 
 GENERATE_OPERATION_CMD(DIV,
 {
@@ -50,7 +60,9 @@ GENERATE_OPERATION_CMD(DIV,
 
     return val1 / val2;
 },
-2, F_DIV, NOP)
+{
+    BuildALUOp(OP(F_DIV), 2, node, info);
+})
 
 GENERATE_OPERATION_CMD(POW,
 {
@@ -58,7 +70,9 @@ GENERATE_OPERATION_CMD(POW,
 
     return pow(val1, val2);
 },
-2, F_POW, NOP)
+{
+    assert(false);
+})
 
 #undef  CALC_CHECK
 #define CALC_CHECK()        \
@@ -75,7 +89,9 @@ GENERATE_OPERATION_CMD(SQRT,
 
     return sqrt(val1);
 },
-1, F_SQRT, NOP)
+{
+    BuildALUOp(OP(F_SQRT), 1, node, info);
+})
 
 GENERATE_OPERATION_CMD(SIN,
 {
@@ -83,7 +99,9 @@ GENERATE_OPERATION_CMD(SIN,
 
     return sin(val1);
 },
-1, F_SIN, NOP)
+{
+    assert(false);
+})
 
 GENERATE_OPERATION_CMD(COS,
 {
@@ -91,7 +109,9 @@ GENERATE_OPERATION_CMD(COS,
 
     return cos(val1);
 },
-1, F_COS, NOP)
+{
+    assert(false);
+})
 
 GENERATE_OPERATION_CMD(TAN,
 {
@@ -99,7 +119,9 @@ GENERATE_OPERATION_CMD(TAN,
 
     return tan(val1);
 },
-1, F_TAN, NOP)
+{
+    assert(false);
+})
 
 GENERATE_OPERATION_CMD(COT,
 {
@@ -112,7 +134,9 @@ GENERATE_OPERATION_CMD(COT,
 
     return 1 / tan_val1;
 },
-1, F_COT, NOP)
+{
+    assert(false);
+})
 
 GENERATE_OPERATION_CMD(ASSIGN,
 {
@@ -120,15 +144,36 @@ GENERATE_OPERATION_CMD(ASSIGN,
 
     return -1;
 },
-2, NOP, NOP)
+{
+    assert(info->localTable);
+    assert(info->allNamesTable);
+    assert(info->ir);
+
+    assert(node->left->valueType == TreeNodeValueType::NAME);
+    
+    Name* varName = nullptr;
+    NameTableFind(info->localTable, 
+                  NameTableGetName(info->allNamesTable, node->left->value.nameId), &varName);
+
+    assert(varName);
+
+    Build(node->right, info);
+
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
+    IR_PUSH(IRNodeCreate(OP(F_MOV), IROperandMemCreate(varName->memShift, varName->reg),
+                                    IROperandRegCreate(IR_REG(XMM0))));
+})
 
 GENERATE_OPERATION_CMD(LINE_END, 
 {
     assert(false);
 
-    return -1; //TODO: 
+    return -1;
 },
-2, NOP, NOP)
+{
+    Build(node->left,  info);
+    Build(node->right, info);
+})
 
 GENERATE_OPERATION_CMD(IF, 
 {
@@ -136,7 +181,38 @@ GENERATE_OPERATION_CMD(IF,
 
     return -1;
 },
-2, NOP, NOP)
+{
+    assert(info->localTable);
+    assert(info->allNamesTable);
+    assert(info->ir);
+
+    // TODO: можно отдельную функцию, где иду в condition и там, основываясь сразу на сравнении,
+    // Делаю вывод о jump to if end / not jump (типо на стек не кладу, выгодно по времени)
+
+    size_t id = info->labelId;
+    info->labelId += 1;
+
+    static const size_t maxLabelLen = 64;
+    char ifEndLabel[maxLabelLen] = "";
+    snprintf(ifEndLabel, maxLabelLen, "END_IF_%zu", id);
+
+    Build(node->left, info);
+    
+
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
+    
+    IR_PUSH(IRNodeCreate(OP(F_XOR), IROperandRegCreate(IR_REG(XMM1)), 
+                                    IROperandRegCreate(IR_REG(XMM1))));
+
+    IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)), 
+                                    IROperandRegCreate(IR_REG(XMM1))));
+
+    IR_PUSH(IRNodeCreate(OP(JE), IROperandLabelCreate(ifEndLabel), true));
+
+    Build(node->right, info);
+
+    IR_PUSH_LABEL(ifEndLabel);
+})
 
 GENERATE_OPERATION_CMD(WHILE,
 {
@@ -144,108 +220,239 @@ GENERATE_OPERATION_CMD(WHILE,
 
     return -1;
 },
-2, NOP, NOP)
+{
+    assert(info->localTable);
+    assert(info->allNamesTable);
+    assert(info->ir);
+
+    size_t id = info->labelId;
+    info->labelId += 1;
+
+    static const size_t maxLabelLen = 64;
+    char whileBeginLabel[maxLabelLen] = "";
+    char whileEndLabel  [maxLabelLen] = "";
+    snprintf(whileBeginLabel, maxLabelLen, "WHILE_%zu",     id);
+    snprintf(whileEndLabel,   maxLabelLen, "END_WHILE_%zu", id);
+
+    IR_PUSH_LABEL(whileBeginLabel);
+
+    Build(node->left, info);
+
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
+    
+    IR_PUSH(IRNodeCreate(OP(F_XOR), IROperandRegCreate(IR_REG(XMM1)),
+                                    IROperandRegCreate(IR_REG(XMM1))));
+
+    IR_PUSH(IRNodeCreate(OP(F_CMP), IROperandRegCreate(IR_REG(XMM0)), 
+                                    IROperandRegCreate(IR_REG(XMM1))));
+                                               
+    IR_PUSH(IRNodeCreate(OP(JE), IROperandLabelCreate(whileEndLabel), true));
+
+    Build(node->right, info);
+
+    IR_PUSH(IRNodeCreate(OP(JMP), IROperandLabelCreate(whileBeginLabel), true));
+
+    IR_PUSH_LABEL(whileEndLabel);
+})
 
 GENERATE_OPERATION_CMD(LESS, 
 {
 
 },
-2, NOP, JL)
+{
+    BuildComparison(OP(JB), node, info);
+})
 
 GENERATE_OPERATION_CMD(GREATER, 
 {
 
 },
-2, NOP, JG)
+{
+    BuildComparison(OP(JA), node, info);
+})
 
 GENERATE_OPERATION_CMD(LESS_EQ, 
 {
 
 },
-2, NOP, JLE)
+{
+    BuildComparison(OP(JBE), node, info);
+})
 
 GENERATE_OPERATION_CMD(GREATER_EQ,
 {
 
 },
-2, NOP, JGE)
+{
+    BuildComparison(OP(JAE), node, info);
+})
 
 GENERATE_OPERATION_CMD(EQ, 
 {
 
 },
-2, NOP, JE)
+{
+    BuildComparison(OP(JE), node, info);
+})
 
 GENERATE_OPERATION_CMD(NOT_EQ,
 {
 
 },
-2, NOP, JNE)
+{
+    BuildComparison(OP(JNE), node, info);
+})
 
 GENERATE_OPERATION_CMD(AND,
 {
-
+    
 },
-2, F_AND, NOP)
+{
+    BuildALUOp(OP(F_AND), 2, node, info);
+})
 
 GENERATE_OPERATION_CMD(OR,
 {
 
 },
-2, F_OR, NOP)
+{
+    BuildALUOp(OP(F_OR), 2, node, info);
+})
 
 GENERATE_OPERATION_CMD(PRINT,
 {
 
 },
-1, NOP, NOP)
+{
+    assert(info->ir);
+
+    if (node->left->valueType == TreeNodeValueType::STRING_LITERAL)
+    {
+        const char* name = NameTableGetName(info->allNamesTable, node->left->value.nameId);
+        IR_PUSH(IRNodeCreate(OP(STR_OUT), IROperandStrCreate(name)));
+
+        return;
+    }
+
+    Build(node->left, info);
+
+    IR_PUSH(IRNodeCreate(OP(F_POP), IROperandRegCreate(IR_REG(XMM0))));
+    IR_PUSH(IRNodeCreate(OP(F_OUT), IROperandRegCreate(IR_REG(XMM0))));    
+})
 
 GENERATE_OPERATION_CMD(READ,
 {
 
 },
-0, NOP, NOP)
+{
+    assert(info->ir);
+
+    IR_PUSH(IRNodeCreate(OP(F_IN)));
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
+})
 
 GENERATE_OPERATION_CMD(COMMA,
 {
 
 },
-2, NOP, NOP)
+{
+    assert(false); // Unreachable 
+})
 
 GENERATE_OPERATION_CMD(TYPE_INT,
 {
 
 },
-0, NOP, NOP)
+{
+    /* EMPTY */
+})
 
 GENERATE_OPERATION_CMD(TYPE,
 {
 
 },
-2, NOP, NOP)
+{
+    Build(node->left,  info);
+    Build(node->right, info);
+})
 
 GENERATE_OPERATION_CMD(NEW_FUNC,
 {
 
 },
-2, NOP, NOP)
+{
+    Build(node->left,  info);
+    Build(node->right, info);
+})
 
 GENERATE_OPERATION_CMD(FUNC,
 {
 
 },
-1, NOP, NOP)
+{
+    assert(info->allNamesTable);
+    assert(info->ir);
+    assert(node->left);
+    assert(node->left->valueType == TreeNodeValueType::NAME);
+
+    TreeNode* funcNameNode = node->left;
+
+    IR_PUSH_LABEL(NameTableGetName(info->allNamesTable, funcNameNode->value.nameId));
+
+    IR_PUSH(IRNodeCreate(OP(PUSH), IROperandRegCreate(IR_REG(RBP))));
+    IR_PUSH(IRNodeCreate(OP(MOV),  IROperandRegCreate(IR_REG(RBP)), 
+                                   IROperandRegCreate(IR_REG(RSP))));
+
+    NameTableType* localTable = nullptr;
+    NameTableCtor(&localTable);
+    info->localTable = localTable;
+
+    NameTableSetLocalTable(info->allNamesTable, funcNameNode->value.nameId, info->localTable);
+
+    info->memShift = 2 * (int)RXX_REG_BYTE_SIZE;
+    info->regShift = IR_REG(RBP);
+
+    info->numberOfFuncParams = InitFuncParams(funcNameNode->left, info);
+
+    info->memShift = 0;
+    int rspShift = InitFuncLocalVars(funcNameNode->right, info);
+
+    IR_PUSH(IRNodeCreate(OP(ADD), IROperandRegCreate(IR_REG(RSP)), 
+                                  IROperandImmCreate((long long)rspShift)));
+
+    Build(funcNameNode->right, info);
+
+    BuildFuncQuit(info);
+})
 
 GENERATE_OPERATION_CMD(FUNC_CALL,
 {
 
 },
-1, NOP, NOP)
+{
+    assert(node->left->valueType == TreeNodeValueType::NAME);
+
+    // No registers saving because they are used only temporary
+    PushFuncCallArgs(node->left->left, info);
+
+    const char* funcName = NameTableGetName(info->allNamesTable, node->left->value.nameId);
+
+    IR_PUSH(IRNodeCreate(OP(CALL), IROperandLabelCreate(funcName), true));
+
+    // pushing ret value on stack
+    IR_PUSH(IRNodeCreate(OP(F_PUSH), IROperandRegCreate(IR_REG(XMM0))));
+})
 
 GENERATE_OPERATION_CMD(RETURN,
 {
 
 },
-1, NOP, NOP)
+{
+    assert(info->ir);
+
+    Build(node->left, info);
+    
+    BuildFuncQuit(info);
+})
 
 #undef CALC_CHECK
