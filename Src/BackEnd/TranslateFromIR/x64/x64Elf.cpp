@@ -138,7 +138,8 @@ static void LoadStdLibCode(FILE* outBinary)
     assert(outBinary);
 
     FILE* stdLibStream = fopen(StdLibCodeName, "rb");
-
+    assert(stdLibStream);
+    
     uint8_t* text = (uint8_t*)ReadText(stdLibStream);
 
     Elf64_Ehdr* elfHeader = (Elf64_Ehdr*)text;
@@ -233,6 +234,7 @@ static void LoadStdLibRodata(FILE* outBinary, uint64_t* asmAddr)
     assert(asmAddr);
 
     FILE* stdLibStream = fopen(StdLibCodeName, "rb");
+    assert(stdLibStream);
 
     uint8_t* text = (uint8_t*)ReadText(stdLibStream);
 

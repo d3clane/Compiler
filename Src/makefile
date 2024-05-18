@@ -19,7 +19,7 @@ CXXFLAGS += -I $(HOME)
 
 OBJECTDIR  = build/backBuild
 PROGRAMDIR = build/backBuild/bin
-TARGET 	   = backEnd.exe
+TARGET 	   = backEnd
 
 DOXYFILE = Others/Doxyfile
 
