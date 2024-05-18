@@ -9,8 +9,8 @@ fi
 
 ./bin/frontEnd $input_file bin/ParseTree.txt
 
-./bin/middleEnd bin/ParseTree.txt bin/SimplifiedTree.txt
+#./bin/middleEnd bin/ParseTree.txt bin/SimplifiedTree.txt
 
-./bin/backEnd bin/SimplifiedTree.txt bin/AsmCode.txt bin/out.bin
+./bin/backEndSpu bin/ParseTree.txt bin/AsmCode.txt bin/out.bin
 
 ./bin/asm bin/AsmCode.txt bin/out.bin
