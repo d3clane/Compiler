@@ -85,8 +85,8 @@ BACK_END_TRANSLATE_X64_CODE_ARRAY_OBJ	= $(BACK_END_TRANSLATE_X64_CODE_ARRAY_CPP:
 .PHONY: all docs clean buildDirs
 
 all: $(PROGRAMDIR)/$(TARGET)
-	rm -rf ../Program/$(TARGET)
-	cp $(PROGRAMDIR)/$(TARGET) ../Program/
+	rm -rf ../examples/bin/$(TARGET)
+	cp $(PROGRAMDIR)/$(TARGET) ../examples/bin/
 
 $(PROGRAMDIR)/$(TARGET): $(TREE_OBJ) $(TREE_NAME_TABLE_OBJ) $(COMMON_OBJ) 			\
 						 $(BACK_END_OBJ) $(BACK_END_IR_OBJ) $(IR_LABEL_TABLE_OBJ) 	\

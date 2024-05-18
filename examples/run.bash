@@ -11,6 +11,4 @@ fi
 
 ./bin/middleEnd bin/ParseTree.txt bin/SimplifiedTree.txt
 
-./bin/backEnd bin/SimplifiedTree.txt bin/AsmCode.txt bin/out.bin
-
-./bin/asm bin/AsmCode.txt bin/out.bin
+./bin/backEnd bin/SimplifiedTree.txt bin/Out.bin
