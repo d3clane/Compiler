@@ -6,3 +6,4 @@ Program/
 *.out
 *.o
 bin/
+*.dot
