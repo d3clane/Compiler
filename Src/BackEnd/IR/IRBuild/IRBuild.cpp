@@ -317,8 +317,6 @@ static size_t InitFuncParams(const TreeNode* node, CompilerInfoState* info)
         // I'm not going to delete local tables strings without deleting global table
         // Just using extra mem + time. 
 
-        // TODO: mem leak never DTOR name table. + Create recursive name table dtor
-
         NameTablePush(info->localTable, pushName);
 
         return 1;
