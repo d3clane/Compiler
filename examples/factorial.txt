@@ -12,14 +12,7 @@
 57
     575757 n == { 57
 
-    575757 cnt == 0 57
-
-    57! cnt > 10000 57
-    57
-        575757 fac == factorial { n 57 57
-
-        cnt == cnt - 1 57
-    {
+    575757 fac == factorial { n 57 57
 
     . "factorial: " 57
     . fac 57
