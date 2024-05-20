@@ -1,12 +1,24 @@
 # Компилятор
 
-## Установка
+## Установка и запуск
 
 ```
 git clone https://github.com/d3clane/Compiler.git
 cd Src 
 make buildDirs && make
 ```
+
+При запуске кода из [examples](examples/) необходимо просто запустить скрипт `./run.bash`. 
+
+Запуск только backend выглядит так:
+
+```
+./bin/backEnd [input AST] [out Binary] [optional]
+```
+
+На данный момент в опциональных представлен только один флаг:
+
+1. `-S [out asm]
 
 ## Цель работы
 
