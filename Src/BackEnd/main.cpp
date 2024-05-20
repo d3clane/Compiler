@@ -41,16 +41,12 @@ int main(int argc, const char* argv[])
     Tree tree = {};
     TreeCtor(&tree);
 
-    NameTableType* allNamesTable = nullptr;
-    TreeReadPrefixFormat(&tree, &allNamesTable, inStream);
+    TreeReadPrefixFormat(&tree, inStream);
 
-    //TreeGraphicDump(&tree, true, allNamesTable);
-
-    IR* ir = IRBuild(&tree, allNamesTable);
+    IR* ir = IRBuild(&tree);
     TranslateToX64(ir, outAsmStream, outBinStream);
 
     TreeDtor(&tree);
-    NameTableDtor(allNamesTable);
     IRDtor(ir);
 
     fclose(inStream);

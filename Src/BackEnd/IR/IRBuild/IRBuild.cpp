@@ -67,15 +67,14 @@ do                                                              \
 } while (0)
 
 
-IR* IRBuild(const Tree* tree, const NameTableType* allNamesTable)
+IR* IRBuild(const Tree* tree)
 {
     assert(tree);
-    assert(allNamesTable);
 
     IR* ir = IRCtor();
     
     CompilerInfoState info = CompilerInfoStateCtor();
-    info.allNamesTable = allNamesTable;
+    info.allNamesTable = tree->allNamesTable;
     info.ir = ir;
 
     info.labelTable = nullptr;

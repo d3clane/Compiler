@@ -40,6 +40,8 @@ struct TreeNode
 struct Tree
 {
     TreeNode* root;
+
+    NameTableType* allNamesTable;
 };
 
 enum class TreeErrors
@@ -85,25 +87,22 @@ TreeNode* TreeStringLiteralNodeCreate   (size_t literalId);
 #define TREE_TEXT_DUMP(tree) TreeTextDump((tree), __FILE__, __func__, __LINE__)
 
 void TreeTextDump(const Tree* tree, 
-                  const char* fileName, const char* funcName, const int line,
-                  const NameTableType* nameTable);
+                  const char* fileName, const char* funcName, const int line);
 
-void TreeGraphicDump(const Tree* tree, bool openImg, const NameTableType* nameTable);
+void TreeGraphicDump(const Tree* tree, bool openImg);
 
 #define TREE_DUMP(tree) TreeDump((tree), __FILE__, __func__, __LINE__)
 
-void TreeDump(const Tree* tree, const char* fileName, const char* funcName, const int line,
-                                                                 const NameTableType* nameTable);
+void TreeDump(const Tree* tree, const char* fileName, const char* funcName, const int line);
 
 void TreeNodeSetEdges(TreeNode* node, TreeNode* left, TreeNode* right);
 
 //Tree       TreeCopy(const Tree* tree);
 //TreeNode* TreeNodeCopy(const TreeNode* node);
 
-TreeErrors TreePrintPrefixFormat(const Tree* tree, FILE* outStream,
-                                 const NameTableType* nameTable);
+TreeErrors TreePrintPrefixFormat(const Tree* tree, FILE* outStream);
 
-TreeErrors TreeReadPrefixFormat(Tree* tree, NameTableType** allNamesTable, FILE* inStream = stdin);
+TreeErrors TreeReadPrefixFormat(Tree* tree, FILE* inStream = stdin);
 
 //-------------Operations funcs-----------
 
