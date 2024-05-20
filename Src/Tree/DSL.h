@@ -14,6 +14,8 @@
 #define    IS_OP(token)  (token->valueType        == TreeNodeValueType::OPERATION)
 #define   IS_NAME(token) (token->valueType        == TreeNodeValueType::NAME)
 
+#define IS_STRING_LITERAL(token) (token->valueType == TreeNodeValueType::STRING_LITERAL)
+
 #define L_NUM(token) token->left->value.num
 #define R_NUM(token) token->right->value.num
 

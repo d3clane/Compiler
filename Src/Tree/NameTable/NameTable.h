@@ -161,6 +161,6 @@ static inline void NameTableSetLocalTable(const NameTableType* table, size_t pos
 void NameTablePrintError(NameTableErrors error);
 
 void NameCtor(Name* name, const char* string, void* localNameTablePtr, 
-              int memShift, IRRegister reg);
+              int memShift, IRRegister reg = IRRegister::NO_REG);
 
 #endif // NAME_TABLE_H

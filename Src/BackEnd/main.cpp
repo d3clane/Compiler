@@ -44,6 +44,7 @@ int main(int argc, const char* argv[])
 
     TreeReadPrefixFormat(&tree, inStream);
 
+    TreeGraphicDump(&tree, true);
     IR* ir = IRBuild(&tree);
     TranslateToX64(ir, outAsmStream, outBinStream);
 
@@ -70,6 +71,9 @@ static void ReadArgs(int argc, const char* argv[],
     *inFileName     = argv[1];
     *outBinFileName = argv[2];
     
+    if (argc == 3)
+        return;
+        
     assert(strcmp(argv[3], "-S") == 0);
     if (argc == 4)
         *outAsmFileName = argv[4];

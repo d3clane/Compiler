@@ -240,7 +240,7 @@ static void DotFileCreateNodes(const TreeNode* node, FILE* outDotFile,
     }
     else if (node->valueType == TreeNodeValueType::STRING_LITERAL)
     {
-        fprintf(outDotFile, "fillcolor=\"#78DBE2\", label = %s, ",
+        fprintf(outDotFile, "fillcolor=\"#78DBE2\", label = \"%s\", ",
                                 nameTable->data[node->value.nameId].name);   
     }
     else 
@@ -435,7 +435,7 @@ static TreeErrors TreePrintPrefixFormat(const TreeNode* node, FILE* outStream,
     else if (node->valueType == TreeNodeValueType::NAME)
         PRINT(outStream, "%s ", nameTable->data[node->value.nameId].name);
     else if (node->valueType == TreeNodeValueType::STRING_LITERAL)
-        PRINT(outStream, "%s ", nameTable->data[node->value.nameId].name);
+        PRINT(outStream, "\"%s\" ", nameTable->data[node->value.nameId].name);
     else
         PRINT(outStream, "%s ", TreeOperationGetLongName(node->value.operation));
 
