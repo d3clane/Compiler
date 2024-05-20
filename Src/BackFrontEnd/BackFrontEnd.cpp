@@ -26,7 +26,11 @@ static void CodeBuild(TreeNode* node, NameTableType* allNamesTable, FILE* outStr
     
     if (node->valueType == TreeNodeValueType::NUM)
     {
-        fprintf(outStream, "%d", node->value.num);
+        if (node->value.num < 0)
+            fprintf(outStream, "(0 + %d)", -node->value.num);
+        else
+            fprintf(outStream, "%d", node->value.num);
+            
         return;
     }
 
@@ -40,7 +44,7 @@ static void CodeBuild(TreeNode* node, NameTableType* allNamesTable, FILE* outStr
 
     if (node->valueType == TreeNodeValueType::STRING_LITERAL)
     {
-        fprintf(outStream, "%s", allNamesTable->data[node->value.nameId].name);
+        fprintf(outStream, "\"%s\"", allNamesTable->data[node->value.nameId].name);
         return;
     }
 
@@ -174,6 +178,8 @@ static void CodeBuild(TreeNode* node, NameTableType* allNamesTable, FILE* outStr
 
         case TreeOperationId::ADD:
         {
+            fprintf(outStream, "(");
+
             CODE_BUILD(node->left);
 
             fprintf(outStream, " - ");
@@ -406,7 +412,7 @@ static void CodeBuild(TreeNode* node, NameTableType* allNamesTable, FILE* outStr
 
         default:
         {
-            CodeBuild(node->left,  allNamesTable, outStream, numberOfTabs);
+            CODE_BUILD(node->left);
             CODE_BUILD(node->right);
             break;
         }

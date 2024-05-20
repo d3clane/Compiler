@@ -51,7 +51,7 @@ static void DescentStateDtor(DescentState* state);
 // MUL_DIV          ::= POW {[*, /] POW}*
 // POW              ::= FUNC_CALL {['^'] FUNC_CALL}*
 // FUNC_CALL        ::= IN_BUILD_FUNCS | CREATED_FUNCS | EXPR
-// IN_BUILT_FUNCS   ::= [sin/cos/tan/cot/sqrt] EXPR '57' | READ
+// IN_BUILT_FUNCS   ::= [sin/cos/tan/cot/sqrt] '(' OR ')' | READ
 // MADE_FUNC_CALL   ::= VAR '{' FUNC_VARS_CALL '57' 
 // FUNC_VARS_CALL   ::= {OR}*
 // EXPR             ::= '(' OR ')' | ARG
@@ -765,10 +765,9 @@ static TreeNode* GetBuiltInFuncCall(DescentState* state, bool* outErr)
     if (PickToken(state, LangOpId::L_BRACE))
         return GetRead(state, outErr);
 
-    if (!(PickToken(state, LangOpId::SIN) || PickToken(state, LangOpId::COS) ||
-          PickToken(state, LangOpId::TAN) || PickToken(state, LangOpId::COT) ||
-          PickToken(state, LangOpId::SQRT)))
-        return GetExpr(state, outErr);
+    assert((PickToken(state, LangOpId::SIN) || PickToken(state, LangOpId::COS) ||
+            PickToken(state, LangOpId::TAN) || PickToken(state, LangOpId::COT) ||
+            PickToken(state, LangOpId::SQRT)));
 
     LangOpId langOpId = GetLastTokenId(state);
     POS(state)++;
