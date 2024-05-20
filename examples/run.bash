@@ -12,3 +12,7 @@ fi
 ./bin/middleEnd bin/ParseTree.txt bin/SimplifiedTree.txt
 
 ./bin/backEnd bin/SimplifiedTree.txt bin/Out.bin bin/Tmp.s
+
+rm -rf bin/*.html
+rm -rf bin/ParseTree.txt
+rm -rf bin/SimplifiedTree.txt

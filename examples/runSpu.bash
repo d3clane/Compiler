@@ -14,3 +14,7 @@ fi
 ./bin/backEndSpu bin/SimplifiedTree.txt bin/AsmCode.txt bin/out.bin
 
 ./bin/asm bin/AsmCode.txt bin/out.bin
+
+rm -rf bin/*.html
+rm -rf bin/ParseTree.txt
+rm -rf bin/SimplifiedTree.txt
