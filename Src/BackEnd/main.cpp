@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "Tree/Tree.h"
 #include "Tree/NameTable/NameTable.h"
@@ -58,10 +59,10 @@ static void ReadArgs(int argc, const char* argv[],
                      const char** inFileName, const char** outBinFileName, 
                      const char** outAsmFileName)
 {
-    if (argc != 3 && argc != 4)
+    if (argc != 3 && argc != 5)
     {
         printf("Usage: %s [file with AST] [out binary file] [optional...]\n", argv[0]);
-        printf("Optional - [out asm file name]\n");
+        printf("Optional - -S [out asm file name]\n");
 
         exit(0);
     }
@@ -69,6 +70,7 @@ static void ReadArgs(int argc, const char* argv[],
     *inFileName     = argv[1];
     *outBinFileName = argv[2];
     
+    assert(strcmp(argv[3], "-S") == 0);
     if (argc == 4)
-        *outAsmFileName = argv[3];
+        *outAsmFileName = argv[4];
 }
