@@ -405,7 +405,6 @@ static const Elf64_Phdr ProgramCodePheader =
 Формат elf файла из которого подгружается стандартная библиотека можно увидеть с помощью readelf:
 
 <img src="https://github.com/d3clane/Compiler/blob/main/ReadmeAssets/imgs/StdlibElfHeader.png" width="80%" height="80%">
-![Elf header](https://github.com/d3clane/Compiler/blob/main/ReadmeAssets/imgs/StdlibElfHeader.png)
 
 ![Program header](https://github.com/d3clane/Compiler/blob/main/ReadmeAssets/imgs/StdLibProgramHeader.png)
 
