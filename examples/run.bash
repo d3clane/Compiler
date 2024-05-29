@@ -1,18 +1,25 @@
 #!/bin/bash
 
 input_file=$1
+arch_name=$2
 
-if [ -z "$input_file" ]; then
-    echo "Usage: $0 <input file>"
+if [ -z "$input_file" ] || [ -z "$arch_name" ]; then
+    echo "Usage: $0 -march=name"
     exit 1
 fi
 
-./bin/frontEnd $input_file bin/ParseTree.txt
-
-./bin/middleEnd bin/ParseTree.txt bin/SimplifiedTree.txt
-
-./bin/backEnd bin/SimplifiedTree.txt bin/Out.bin -S bin/Tmp.s
-
-rm -rf bin/*.html
-rm -rf bin/ParseTree.txt
-#rm -rf bin/SimplifiedTree.txt
+case "$arch_name" in
+  "-march=elf64")
+    ./runBin.bash "$input_file"
+    ;;
+  "-march=spu57")
+    ./runSpu.bash "$input_file"
+    ;;
+  *)
+    echo "Undefined arch name"
+    echo "Possible arch names:"
+    echo "- elf64"
+    echo "- spu57"
+    exit 1
+    ;;
+esac
