@@ -4,7 +4,7 @@ input_file=$1
 arch_name=$2
 
 if [ -z "$input_file" ] || [ -z "$arch_name" ]; then
-    echo "Usage: $0 -march=name"
+    echo "Usage: $0 [input_file] [-march=name]"
     exit 1
 fi
 
