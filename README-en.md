@@ -480,21 +480,21 @@ The custom processor emulator is compiled with the flags `-Ofast -D NDEBUG`, wit
 Execution on the custom processor emulator:
 
 |           | Run 1   | Run 2   | Run 3   | Average         | Average per $10^7$ cycles |
-|:---:      |:---:    |:---:    |:---:    |:---:           |:---:                       |
+|---      |---    |---    |---    |---           |---                       |
 | Factorial | 11.478  | 11.580  | 12.032  | $11.7 ± 0.3$ | $11.7 ± 0.3$             |
 | Quadratic | 16.863  | 16.498  | 16.409  | $16.6 ± 0.2$ | $16.6 ± 0.2$             |
 
 Execution of the generated binary:
 
 |           | Run 1   | Run 2   | Run 3   | Average         | Average per $10^7$ cycles |
-|:---:      |:---:    |:---:    |:---:    |:---:           |:---:                       |
+|---      |---    |---    |---    |---           |---                       |
 | Factorial | 5.911   | 6.290   | 5.937   | $6.1 ± 0.2$   | $0.61 ± 0.02$           |
 | Quadratic | 7.563   | 6.639   | 7.396   | $7.2 ± 0.5$   | $0.72 ± 0.05$           |
 
 Comparison:
 
 |           | $10^7$ cycles x64 | $10^7$ cycles emulator | Speedup         |
-|:---:      |:---:              |:---:                   |:---:            |
+|---      |---              |---                   |---            |
 | Factorial |$0.61 ± 0.02$    |$11.7 ± 0.3$          | $19.2 ± 1.1$  |
 | Quadratic |$0.72 ± 0.05$    |$16.6 ± 0.2$          | $23.1 ± 1.9$  |
 
