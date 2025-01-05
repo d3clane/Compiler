@@ -61,11 +61,11 @@ The order in which actions should be performed is determined by the tree structu
 
 The expression `int value = (2 + 3) * (4 + 5)` looks like this:
 
-
+![add_mul](https://github.com/d3clane/ProgrammingLanguage/blob/main/ReadmeAssets/imgs/add_mul.png)
 
 The expression `int value = 2 + 3 * (4 + 5)` looks like this:
 
-
+![mul_add](https://github.com/d3clane/ProgrammingLanguage/blob/main/ReadmeAssets/imgs/mul_add.png)
 
 While traversing the tree, the left subtree is fully evaluated first, followed by the right subtree, and finally, the operation at the root is applied to the results. In the first example, the sum `2 + 3` is calculated first, then `4 + 5`, and finally, their product. In the second example, `4 + 5` is calculated first, followed by `3 * (4 + 5)`, and finally `2 + 3 * (4 + 5)`.
 
@@ -202,7 +202,7 @@ Once the grammar is defined, recursive descent is straightforward. All that is r
 
 An example AST generated for the source code of the [factorial program](examples/factorial.txt):
 
-
+![factorial](https://github.com/d3clane/ProgrammingLanguage/blob/main/ReadmeAssets/imgs/factorial.png)
 
 Operations are marked in green, names (variables / functions / string literals) in blue, and numbers in dark blue.
 
