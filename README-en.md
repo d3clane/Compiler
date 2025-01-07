@@ -210,7 +210,7 @@ Operations are marked in green, names (variables / functions / string literals) 
 
 The middle-end currently supports a very limited number of optimizations:
 
-1. Constant folding. Arithmetic expressions that do not involve variables are reduced to a single constant. For example, `$(5 \cdot 6) + \frac{3}{1}$` is reduced to a single node with the value \$33\$.
+1. Constant folding. Arithmetic expressions that do not involve variables are reduced to a single constant. For example, $(5 \cdot 6) + \frac{3}{1}$ is reduced to a single node with the value $33$.
 2. Removal of neutral nodes. For example, multiplying any expression by zero is reduced to the constant zero. Similarly, multiplying by one reduces the expression, removing the multiplication operation and the one.
 
 These optimizations continue until no further changes occur. If the tree remains unchanged after another optimization cycle, the middle-end completes its work.
