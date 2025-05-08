@@ -73,5 +73,5 @@ clean:
 	rm -rf $(OBJECTDIR)/*.o
 
 buildDirs:
-	mkdir $(OBJECTDIR)
-	mkdir $(PROGRAMDIR)
+	mkdir -p $(OBJECTDIR)
+	mkdir -p $(PROGRAMDIR)

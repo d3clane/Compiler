@@ -16,55 +16,16 @@ CXXFLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-l
 HOME = $(shell pwd)
 CXXFLAGS += -I $(HOME)
 
-OBJECTDIR  = build/backFrontBuild
-PROGRAMDIR = build/backFrontBuild/bin
-TARGET 	   = backFrontEnd
+OBJECTDIR  = build/preprocessorBuild
+PROGRAMDIR = build/preprocessorBuild/bin
+TARGET 	   = preprocessor
 
 DOXYFILE = Others/Doxyfile
 
-TREE_DIR = Tree
-TREE_CPP = DSL.cpp Tree.cpp	
-TREE_OBJ = $(TREE_CPP:%.cpp=$(OBJECTDIR)/%.o)
+.PHONY: all
 
-TREE_NAME_TABLE_DIR = Tree/NameTable
-TREE_NAME_TABLE_CPP = ArrayFuncs.cpp HashFuncs.cpp NameTable.cpp
-TREE_NAME_TABLE_OBJ = $(TREE_NAME_TABLE_CPP:%.cpp=$(OBJECTDIR)/TREE_%.o)
-
-COMMON_DIR = Common
-COMMON_CPP = DoubleFuncs.cpp Log.cpp StringFuncs.cpp
-COMMON_OBJ = $(COMMON_CPP:%.cpp=$(OBJECTDIR)/%.o)
-
-BACK_FRONT_END_DIR = BackFrontEnd
-BACK_FRONT_END_CPP = BackFrontEnd.cpp main.cpp
-BACK_FRONT_END_OBJ = $(BACK_FRONT_END_CPP:%.cpp=$(OBJECTDIR)/%.o)
-
-FAST_INPUT_DIR = FastInput
-FAST_INPUT_CPP = InputOutput.cpp StringFuncs.cpp
-FAST_INPUT_OBJ = $(FAST_INPUT_CPP:%.cpp=$(OBJECTDIR)/$(FAST_INPUT_DIR)_%.o)
-
-.PHONY: all docs clean buildDirs
-
-all: $(PROGRAMDIR)/$(TARGET)
-	#@cp $(PROGRAMDIR)/$(TARGET) ../
-
-$(PROGRAMDIR)/$(TARGET): $(TREE_OBJ) $(TREE_NAME_TABLE_OBJ) $(COMMON_OBJ) $(BACK_FRONT_END_OBJ) $(FAST_INPUT_OBJ)
-	$(CXX) $^ -o $(PROGRAMDIR)/$(TARGET) $(CXXFLAGS)
-
-$(OBJECTDIR)/%.o : $(TREE_DIR)/%.cpp
-	$(CXX) -c $< -o $@ $(CXXFLAGS) 
-
-$(OBJECTDIR)/TREE_%.o : $(TREE_NAME_TABLE_DIR)/%.cpp
-	$(CXX) -c $< -o $@ $(CXXFLAGS) 
-
-$(OBJECTDIR)/%.o : $(COMMON_DIR)/%.cpp
-	$(CXX) -c $< -o $@ $(CXXFLAGS) 
-
-$(OBJECTDIR)/%.o : $(BACK_FRONT_END_DIR)/%.cpp
-	$(CXX) -c $< -o $@ $(CXXFLAGS) 
-
-$(OBJECTDIR)/$(FAST_INPUT_DIR)_%.o : $(FAST_INPUT_DIR)/%.cpp
-	$(CXX) -c $< -o $@ $(CXXFLAGS) 
-
+all: buildDirs
+	g++ Preprocessor/main.cpp -o $(PROGRAMDIR)/$(TARGET) $(CXXFLAGS)
 
 docs: 
 	doxygen $(DOXYFILE)

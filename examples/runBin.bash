@@ -7,11 +7,15 @@ if [ -z "$input_file" ]; then
     exit 1
 fi
 
-./bin/frontEnd $input_file bin/ParseTree.txt
+./bin/preprocessor $input_file bin/after_processing.txt
+
+./bin/frontEnd bin/after_processing.txt bin/ParseTree.txt
 
 ./bin/middleEnd bin/ParseTree.txt bin/SimplifiedTree.txt
 
-./bin/backEnd bin/SimplifiedTree.txt bin/Out.bin -S bin/Tmp.s
+./bin/backEnd bin/SimplifiedTree.txt bin/Out.bin
+
+chmod +x bin/Out.bin
 
 rm -rf bin/*.html
 rm -rf bin/ParseTree.txt
