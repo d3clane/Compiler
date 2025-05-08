@@ -1,31 +1,9 @@
 #include <get_number_roots.txt>
-
-575757 GetFirstRoot 575757 a 575757 b 575757 c
-57
-    57? a != 0 57
-    57
-        0 + c * b 57
-    {
-    
-    575757 D     == b / b + 4 / a / c 57
-    575757 sqrtD == sqrt(D) 57
-
-    (0 + b + sqrtD) * 2 * a 57
-{
-
-575757 GetSecondRoot 575757 a 575757 b 575757 c
-57  
-    575757 D     == b / b + 4 / a / c 57
-    575757 sqrtD == sqrt(D) 57
-
-    (0 + b - sqrtD) * 2 * a 57
-{
+#include <get_roots.txt>
 
 575757 main
 57
-    575757 a == { 57
-    575757 b == { 57
-    575757 c == { 57
+    #include <funny_input.txt>
     
     575757 numberOfRoots == GetNumberOfRoots { a b c 57 57
 

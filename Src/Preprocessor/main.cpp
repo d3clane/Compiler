@@ -31,7 +31,11 @@ std::string_view fetchIncludeFilename(std::string_view include_view) {
 
     auto filename_end = include_view.find(">");
     assert(filename_begin != std::string_view::npos && "invalid #include syntax");
-    assert(filename_end == include_view.size() - 1);
+    if (filename_end != include_view.size() - 1) {
+        std::cout << "filename end - " << filename_end << " size - " << include_view.size() << "\n";
+        std::cout << "filename - " << std::string{include_view.data() + filename_begin, filename_end - filename_begin} << "\n";
+    }
+    //assert(filename_end == include_view.size() - 1);
 
     size_t filename_size = filename_end - filename_begin;
     std::string_view filename{include_view.data() + filename_begin, filename_size};
@@ -45,7 +49,7 @@ processInclude(std::string& str, std::string::size_type include_begin_pos) {
     assert(include_end != std::string::npos && "invalid #include syntax");
     ++include_end;
 
-    std::string_view include_view{str.data() + include_begin_pos, include_end};
+    std::string_view include_view{str.data() + include_begin_pos, include_end - include_begin_pos};
     std::string_view filename_view = fetchIncludeFilename(include_view);
     std::string filename{filename_view};
 
@@ -68,7 +72,7 @@ int main(const int argc, const char* argv[]) {
     auto input = readAll(argv[1]);
     auto output = input;
 
-    auto curr_searching_begin = 0;
+    std::string::size_type curr_searching_begin = 0;
     while (true) {
         auto pos = output.find(matching, curr_searching_begin);
         if (pos == std::string::npos) {
