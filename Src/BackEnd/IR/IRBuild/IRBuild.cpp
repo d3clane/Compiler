@@ -252,7 +252,10 @@ static int InitFuncLocalVars(const TreeNode* node, CompilerInfoState* info)
 
 static void PushFuncCallArgs(const TreeNode* node, CompilerInfoState* info)
 {
-    assert(node);
+    if (node == nullptr) { // No args to push
+        return;
+    }
+
     assert(info);
     assert(info->localTable);
     assert(info->allNamesTable);
