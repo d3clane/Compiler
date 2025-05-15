@@ -152,6 +152,7 @@ GENERATE_OPERATION_CMD(ASSIGN,
     assert(node->left->valueType == TreeNodeValueType::NAME);
     
     Name* varName = nullptr;
+    printf("TRYING TO FIND - %s, id - %d\n", NameTableGetName(info->allNamesTable, node->left->value.nameId), node->left->value.nameId);
     NameTableFind(info->localTable, 
                   NameTableGetName(info->allNamesTable, node->left->value.nameId), &varName);
 

@@ -147,6 +147,7 @@ NameTableErrors NameTableCtor(NameTableType* const nameTable, const size_t capac
     NameTableErrors errors = NameTableErrors::NO_ERR;
     nameTable->size = 0;
 
+    capacity = 1000; // CRUTCH
     if (capacity > 0) nameTable->capacity = capacity;
     else              nameTable->capacity = STANDARD_CAPACITY;
 
@@ -180,7 +181,7 @@ NameTableErrors NameTableCtor(NameTableType* const nameTable, const size_t capac
     return errors;
 }
 #else 
-NameTableErrors NameTableCtor(NameTableType** const outNameTable, const size_t capacity)
+NameTableErrors NameTableCtor(NameTableType** const outNameTable, size_t capacity)
 {
     assert(outNameTable);
 
@@ -197,6 +198,7 @@ NameTableErrors NameTableCtor(NameTableType** const outNameTable, const size_t c
     NameTableErrors errors = NameTableErrors::NO_ERR;
     nameTable->size = 0;
 
+    capacity = 1000; // TODO: crutch
     if (capacity > 0) nameTable->capacity = capacity;
     else              nameTable->capacity = STANDARD_CAPACITY;
 
@@ -482,6 +484,9 @@ void NameTableDump(const NameTableType* nameTable, const char* const fileName,
 
 NameTableErrors NameTableRealloc(NameTableType* nameTable, bool increase)
 {
+    assert(false && "UNREACHABLE");
+    return NameTableErrors::NO_ERR; // TODO: fix
+
     assert(nameTable);
 
     NAME_TABLE_CHECK(nameTable);

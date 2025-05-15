@@ -340,6 +340,10 @@ static void BuildVar(const TreeNode* node, CompilerInfoState* info)
     assert(info);
 
     Name* name = nullptr;
+    
+    auto charname = NameTableGetName(info->allNamesTable, node->value.nameId);
+    assert(charname);
+    printf("FOUND CHARNAME - %s, id was - %d\n", charname, node->value.nameId);
     NameTableFind(info->localTable, 
                   NameTableGetName(info->allNamesTable, node->value.nameId), &name);
     assert(name);

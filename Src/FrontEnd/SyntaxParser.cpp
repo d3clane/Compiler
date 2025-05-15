@@ -300,10 +300,11 @@ static TreeNode* GetFuncDef(DescentState* state, bool* outErr)
     TreeNode* typeNode = GetType(state, outErr);
     IF_ERR_RET(outErr, typeNode, nullptr);
 
+    printf("Before creating func name\n");
     TreeNode* funcName = CreateVar(state, outErr);
     IF_ERR_RET(outErr, typeNode, funcName);
     
-    //TODO: create set table function
+    printf("current nameid - %d\n", funcName->value.nameId);
     assert(!state->globalTable->data[funcName->value.nameId].localNameTable);
     state->globalTable->data[funcName->value.nameId].localNameTable = (void*)localNameTable;
     state->currentLocalTable = localNameTable;
@@ -844,6 +845,8 @@ static TreeNode* CreateVar(DescentState* state, bool* outErr)
 
     Name pushLocalName      = {};
     Name pushToAllNamesName = {};
+    auto name = state->tokens.data[POS(state)].value.name;
+    printf("Create var, current name - %s\n", name);
     NameCtor(&pushLocalName,      state->tokens.data[POS(state)].value.name, nullptr, 0);
     NameCtor(&pushToAllNamesName, state->tokens.data[POS(state)].value.name, nullptr, 0);
 
